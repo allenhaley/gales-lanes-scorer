@@ -175,6 +175,12 @@
   .promo-thumb { width: 48px; height: 36px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); }
   .promo-thumb.empty { background: var(--surface2); }
 
+  /* Export */
+  .export-btn { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; padding: 5px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.15s; white-space: nowrap; }
+  .export-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+  #game-tabs-row { display: flex; align-items: flex-end; justify-content: space-between; padding: 10px 16px 0; background: var(--surface); border-bottom: 1px solid var(--border); }
+  #game-tabs { display: flex; gap: 6px; }
+
   .add-player-tab { font-size: 20px; padding: 8px 14px; color: var(--text-muted); border-style: dashed; flex-shrink: 0; }
   .add-player-tab:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
 
@@ -188,13 +194,6 @@
   .add-player-card .modal-actions { display: flex; gap: 10px; }
   .add-player-card .modal-actions .btn { flex: 1; font-size: 15px; padding: 13px; }
 
-  /* Social bar */
-  .social-bar { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 14px 20px; border-top: 1px solid var(--border); background: var(--surface); }
-  .social-link { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 500; color: var(--text-muted); text-decoration: none; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border); transition: color 0.15s, border-color 0.15s, background 0.15s; }
-  .social-link:hover { color: var(--text); border-color: rgba(255,255,255,0.2); background: var(--surface2); }
-  .social-link svg { flex-shrink: 0; }
-  .social-link.review { color: var(--gold); border-color: rgba(200,164,77,0.3); }
-  .social-link.review:hover { background: rgba(200,164,77,0.08); border-color: rgba(200,164,77,0.6); }
 
   /* Idle slideshow */
   #idle-slideshow { display: none; position: fixed; inset: 0; background: #000; z-index: 80; cursor: pointer; }
@@ -277,29 +276,16 @@
   </div>
 </div>
 
-<!-- SOCIAL BAR (always visible at bottom of setup) -->
-<div class="social-bar" id="setup-social">
-  <a class="social-link" href="https://www.galeslanes.com/eat-drink" target="_blank" rel="noopener">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>
-    Menu
-  </a>
-  <a class="social-link" href="https://www.facebook.com/galeslanes" target="_blank" rel="noopener">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-    Facebook
-  </a>
-  <a class="social-link" href="https://instagram.com/galeslanes/" target="_blank" rel="noopener">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-    Instagram
-  </a>
-  <a class="social-link review" href="https://g.page/r/CWXtuifBv6fBEBM/review" target="_blank" rel="noopener">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-    Leave a Review
-  </a>
-</div>
 
 <!-- GAME SCREEN -->
 <div id="game-screen">
-  <div id="game-tabs"></div>
+  <div id="game-tabs-row">
+    <div id="game-tabs"></div>
+    <button class="export-btn" onclick="exportScores()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export Scores
+    </button>
+  </div>
   <div id="player-tabs"></div>
   <div class="scorecard-wrap">
     <div class="scorecard" id="scorecard"></div>
@@ -314,26 +300,7 @@
   <div class="promo-scores" id="promo-scores"></div>
   <div class="promo-actions">
     <button class="btn btn-gold" id="promo-next-btn" onclick="startNextGame()">Start Game <span id="promo-next-num">2</span> →</button>
-  </div>
-  <div class="social-bar" style="background:transparent;border-top:1px solid rgba(255,255,255,0.06);">
-    <a class="social-link" href="https://www.galeslanes.com/eat-drink" target="_blank" rel="noopener">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>
-      Menu
-    </a>
-    <a class="social-link" href="https://www.facebook.com/galeslanes" target="_blank" rel="noopener">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-      Facebook
-    </a>
-    <a class="social-link" href="https://instagram.com/galeslanes/" target="_blank" rel="noopener">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-      Instagram
-    </a>
-    <a class="social-link review" href="https://g.page/r/CWXtuifBv6fBEBM/review" target="_blank" rel="noopener">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-      Leave a Review
-    </a>
-  </div>
-</div>
+  </div></div>
 
 <!-- EDIT MODAL -->
 <div id="edit-modal">
@@ -358,27 +325,12 @@
     <div class="gameover-actions">
       <button class="btn" onclick="newSession()">New Session</button>
       <button class="btn btn-primary" onclick="playAgain()">Same Players</button>
+      <button class="btn" onclick="exportScores()" style="display:flex;align-items:center;gap:6px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export
+      </button>
     </div>
-    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
-      <a class="social-link review" href="https://g.page/r/CWXtuifBv6fBEBM/review" target="_blank" rel="noopener" style="display:flex;justify-content:center;margin-bottom:10px;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        Enjoyed your visit? Leave us a review!
-      </a>
-      <div class="social-bar" style="background:transparent;border:none;padding:0;gap:12px;">
-        <a class="social-link" href="https://www.galeslanes.com/eat-drink" target="_blank" rel="noopener">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>
-          Menu
-        </a>
-        <a class="social-link" href="https://www.facebook.com/galeslanes" target="_blank" rel="noopener">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-          Facebook
-        </a>
-        <a class="social-link" href="https://instagram.com/galeslanes/" target="_blank" rel="noopener">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-          Instagram
-        </a>
-      </div>
-    </div>
+
   </div>
 </div>
 
@@ -442,7 +394,20 @@ let state = {
 
 // Promo images loaded from /promos/ folder in the repo
 // To update: replace promo-1.jpg or promo-2.jpg in the GitHub promos/ folder
-const PROMO_URLS = ['promos/promo-1.jpg', 'promos/promo-2.jpg'];
+// Promo URLs — tries .jpg, .jpeg, .png in order for each slot
+const PROMO_BASES = ['promos/promo-1', 'promos/promo-2'];
+const MIDGAME_BASES = ['promos/midgame-1', null, null];
+const SLIDE_EXTS = ['.jpg', '.jpeg', '.png'];
+
+async function resolveImageUrl(base) {
+  if (!base) return null;
+  for (const ext of SLIDE_EXTS) {
+    const url = base + ext;
+    const exists = await checkImageExists(url);
+    if (exists) return url + '?v=' + Date.now();
+  }
+  return null;
+}
 let promoUploadSlot = 0;
 
 // Audio context for sounds
@@ -676,16 +641,19 @@ function renderGameTabs() {
       return true;
     });
     const isCurrent = i===state.currentGame;
+    const hasData = state.players.some(p => p.games[i].length > 0);
     return `<div class="game-tab ${isCurrent?'active':''} ${isDone&&!isCurrent?'done':''}"
-      onclick="switchGame(${i})">GAME ${i+1}</div>`;
+      onclick="switchGame(${i})" style="${!hasData&&!isCurrent?'opacity:0.35;pointer-events:none':''}">GAME ${i+1}</div>`;
   }).join('');
 }
 
 function switchGame(idx) {
   state.currentGame = idx;
-  // Find current player for that game
-  const notDone = state.players.findIndex(p => !isPlayerDoneInGame(p,idx));
-  state.current = notDone >= 0 ? notDone : 0;
+  // Allow reviewing any game; if session is over just show scores
+  if (!state.done) {
+    const notDone = state.players.findIndex(p => !isPlayerDoneInGame(p,idx));
+    state.current = notDone >= 0 ? notDone : 0;
+  }
   renderAll();
 }
 
@@ -853,16 +821,13 @@ function getPlayerGameScore(p, gameIdx) {
   return 0;
 }
 
-function showPromoBetweenGames() {
+async function showPromoBetweenGames() {
   const gIdx = state.currentGame;
-  const promoUrl = PROMO_URLS[gIdx];
   const img = document.getElementById('promo-img');
-
-  // Try loading the image; hide it gracefully if file doesn't exist
+  const url = await resolveImageUrl(PROMO_BASES[gIdx]);
   img.onload = () => { img.style.display = 'block'; };
   img.onerror = () => { img.style.display = 'none'; };
-  img.src = promoUrl + '?v=' + Date.now(); // cache-bust so updated images show immediately
-  img.style.display = 'block';
+  if (url) { img.src = url; img.style.display = 'block'; } else { img.style.display = 'none'; }
 
   document.getElementById('promo-game-info').textContent = `GAME ${gIdx+1} COMPLETE`;
   document.getElementById('promo-next-num').textContent = gIdx+2;
@@ -1093,7 +1058,7 @@ document.getElementById('new-player-name').addEventListener('keydown', e => {
 
 // ─── MID-GAME PROMO (FRAME 6) ────────────────────────────────────────
 // One image per game: promos/midgame-1.jpg, midgame-2.jpg, midgame-3.jpg
-const MIDGAME_PROMO_URLS = ['promos/midgame-1.jpg','promos/midgame-2.jpg','promos/midgame-3.jpg'];
+const MIDGAME_PROMO_URLS = ['promos/midgame-1.jpg', null, null]; // Only game 1 midgame promo active
 const MIDGAME_FRAME = 5; // 0-indexed, so frame 6
 const MIDGAME_DURATION = 8000; // 8 seconds
 let midgamePromoShownForGame = [-1]; // track which games have shown the promo
@@ -1112,13 +1077,13 @@ function shouldShowMidgamePromo() {
   return hasFrame6BeenReached();
 }
 
-function showMidgamePromo() {
+async function showMidgamePromo() {
   midgamePromoShownForGame.push(state.currentGame);
-  const url = MIDGAME_PROMO_URLS[state.currentGame];
   const img = document.getElementById('midgame-promo-img');
+  const url = await resolveImageUrl(MIDGAME_BASES[state.currentGame]);
   img.onload = () => { img.style.display = 'block'; };
   img.onerror = () => { img.style.display = 'none'; };
-  img.src = url + '?v=' + Date.now();
+  if (url) { img.src = url; img.style.display = 'block'; } else { img.style.display = 'none'; }
 
   // Reset and start countdown bar
   const bar = document.getElementById('midgame-promo-bar-fill');
@@ -1208,6 +1173,136 @@ function playTimeAlert() {
   } catch(e) {}
 }
 
+// ─── EXPORT SCORES ───────────────────────────────────────────────────
+function exportScores() {
+  const canvas = document.createElement('canvas');
+  const dpr = 2; // retina quality
+  const padX = 40, padY = 40;
+  const rowH = 64, headerH = 44, gameGap = 36;
+  const colW = 52, nameW = 140, gameHeaderH = 32;
+  const totalCols = 10; // frames
+  const totalW = nameW + (colW * totalCols);
+  const numGames = 3;
+  const numPlayers = state.players.length;
+  const tableH = headerH + numPlayers * rowH;
+  const totalH = padY * 2 + 60 + 20 + numGames * (gameHeaderH + tableH + gameGap);
+
+  canvas.width = (totalW + padX * 2) * dpr;
+  canvas.height = totalH * dpr;
+  canvas.style.width = `${totalW + padX * 2}px`;
+  canvas.style.height = `${totalH}px`;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  // Background
+  ctx.fillStyle = '#111111';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Title
+  ctx.fillStyle = '#C8A44D';
+  ctx.font = 'bold 22px Oswald, Arial';
+  ctx.textAlign = 'left';
+  ctx.fillText("GALE'S LANES  —  Score Sheet", padX, padY + 22);
+  ctx.fillStyle = '#4a4741';
+  ctx.font = '13px Inter, Arial';
+  const now = new Date();
+  ctx.fillText(`Lane ${state.lane || '—'}  ·  ${now.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric', year:'numeric'})}  ·  ${now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'})}`, padX, padY + 44);
+
+  let y = padY + 70;
+
+  for (let g = 0; g < numGames; g++) {
+    // Game label
+    ctx.fillStyle = '#B23A2F';
+    ctx.font = 'bold 14px Oswald, Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText(`GAME ${g + 1}`, padX, y + 20);
+    y += gameHeaderH;
+
+    // Header row
+    ctx.fillStyle = '#2c2c2c';
+    ctx.fillRect(padX, y, totalW, headerH);
+    ctx.fillStyle = '#8a8479';
+    ctx.font = '11px Inter, Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText('PLAYER', padX + 10, y + headerH/2 + 4);
+    for (let f = 0; f < 10; f++) {
+      ctx.textAlign = 'center';
+      ctx.fillText(String(f + 1), padX + nameW + f * colW + colW / 2, y + headerH/2 + 4);
+    }
+    y += headerH;
+
+    // Player rows
+    state.players.forEach((p, pi) => {
+      const frames = getFrameData(p.games[g]);
+      const isEven = pi % 2 === 0;
+      ctx.fillStyle = isEven ? '#1a1a1a' : '#222222';
+      ctx.fillRect(padX, y, totalW, rowH);
+
+      // Player color dot + name
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(padX + 16, y + rowH/2, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#F5F2E9';
+      ctx.font = '13px Inter, Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText(p.name, padX + 28, y + rowH/2 - 8);
+
+      // Final score
+      let finalScore = '';
+      for (let i=9;i>=0;i--) { if (typeof frames[i]?.cumScore==='number') { finalScore = String(frames[i].cumScore); break; } }
+      ctx.fillStyle = '#C8A44D';
+      ctx.font = 'bold 18px Oswald, Arial';
+      ctx.fillText(finalScore, padX + 28, y + rowH/2 + 12);
+
+      // Frames
+      frames.forEach((fr, fi) => {
+        const fx = padX + nameW + fi * colW;
+        // Border
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(fx, y, colW, rowH);
+
+        // Balls
+        fr.balls.forEach((v, bi) => {
+          const { text, cls } = displayBall(v, fi, bi, fr.balls);
+          ctx.font = '12px Oswald, Arial';
+          ctx.textAlign = 'center';
+          if (cls === 'strike') ctx.fillStyle = '#B23A2F';
+          else if (cls === 'spare') ctx.fillStyle = '#C8A44D';
+          else ctx.fillStyle = '#8a8479';
+          const ballX = fx + (fi === 9 ? (bi * (colW/3) + colW/6) : (bi === 0 ? colW * 0.35 : colW * 0.65));
+          ctx.fillText(text, ballX, y + 18);
+        });
+
+        // Cumulative score
+        if (fr.cumScore !== null) {
+          ctx.fillStyle = '#F5F2E9';
+          ctx.font = 'bold 16px Oswald, Arial';
+          ctx.textAlign = 'center';
+          ctx.fillText(String(fr.cumScore), fx + colW/2, y + rowH - 10);
+        }
+      });
+
+      // Grid lines
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 0.5;
+      ctx.strokeRect(padX, y, totalW, rowH);
+      y += rowH;
+    });
+
+    y += gameGap;
+  }
+
+  // Download
+  const link = document.createElement('a');
+  const dateStr = new Date().toISOString().slice(0,10);
+  link.download = `gales-lanes-scores-lane${state.lane||'x'}-${dateStr}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  toast('Scores exported! 📥');
+}
+
 // ─── INACTIVITY TIMER ────────────────────────────────────────────────
 const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 let inactivityTimer = null;
@@ -1253,10 +1348,9 @@ async function checkImageExists(url) {
 
 async function loadSlideImages() {
   slideImages = [];
-  const checks = Array.from({length: SLIDE_COUNT}, (_, i) => {
-    const url = `promos/slide-${i+1}.jpg`;
-    return checkImageExists(url).then(exists => exists ? url : null);
-  });
+  const checks = Array.from({length: SLIDE_COUNT}, (_, i) =>
+    resolveImageUrl(`promos/slide-${i+1}`)
+  );
   const results = await Promise.all(checks);
   slideImages = results.filter(Boolean);
 }
@@ -1325,7 +1419,8 @@ function saveState() {
       current: state.current,
       currentGame: state.currentGame,
       done: state.done,
-      active: true
+      active: true,
+      sessionStartTime: sessionStartTime
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(snapshot));
   } catch(e) {}
@@ -1346,6 +1441,7 @@ function loadSavedState() {
     state.current = snap.current;
     state.currentGame = snap.currentGame || 0;
     state.done = snap.done || false;
+    if (snap.sessionStartTime) sessionStartTime = snap.sessionStartTime;
     return true;
   } catch(e) { return false; }
 }
@@ -1356,6 +1452,19 @@ if (loadSavedState()) {
   document.getElementById('setup-screen').style.display = 'none';
   document.getElementById('game-screen').style.display = 'block';
   updateHeaderActions();
+  if (sessionStartTime) {
+    // Recalculate remaining time and restart timers
+    const elapsed = Date.now() - sessionStartTime;
+    const oneHour = 60 * 60 * 1000;
+    const twoHours = 2 * 60 * 60 * 1000;
+    if (elapsed < oneHour) {
+      timeAlert1Timer = setTimeout(() => showTimeAlert(1), oneHour - elapsed);
+      timeAlert2Timer = setTimeout(() => showTimeAlert(2), twoHours - elapsed);
+    } else if (elapsed < twoHours) {
+      timeAlert2Timer = setTimeout(() => showTimeAlert(2), twoHours - elapsed);
+    }
+    headerClockTimer = setInterval(updateSessionClock, 1000);
+  }
   renderAll();
   toast('Session restored ✓');
 } else {
