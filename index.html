@@ -207,6 +207,17 @@
   .slide-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3); transition: background 0.3s; }
   .slide-dot.active { background: rgba(255,255,255,0.85); }
 
+  /* Time alert */
+  #time-alert { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.82); z-index: 55; align-items: center; justify-content: center; padding: 24px; }
+  #time-alert.show { display: flex; }
+  .time-alert-card { background: var(--surface); border-radius: 16px; border: 2px solid var(--gold); padding: 32px 28px; width: 100%; max-width: 380px; text-align: center; }
+  .time-alert-icon { font-size: 48px; margin-bottom: 12px; }
+  .time-alert-title { font-family: 'Oswald', sans-serif; font-size: 28px; letter-spacing: 2px; color: var(--gold); margin-bottom: 8px; text-transform: uppercase; }
+  .time-alert-msg { font-size: 15px; color: var(--text-muted); line-height: 1.5; margin-bottom: 24px; }
+  .time-alert-lane { font-family: 'Oswald', sans-serif; font-size: 16px; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 20px; }
+  .time-alert-actions { display: flex; gap: 10px; }
+  .time-alert-actions .btn { flex: 1; font-size: 15px; padding: 13px; }
+
   /* Mid-game promo popup */
   #midgame-promo { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 45; align-items: center; justify-content: center; flex-direction: column; gap: 16px; padding: 24px; cursor: pointer; }
   #midgame-promo.show { display: flex; }
@@ -386,6 +397,19 @@
   </div>
 </div>
 
+<!-- TIME ALERT -->
+<div id="time-alert">
+  <div class="time-alert-card">
+    <div class="time-alert-icon">⏰</div>
+    <div class="time-alert-title" id="time-alert-title">1 Hour Up!</div>
+    <div class="time-alert-lane" id="time-alert-lane"></div>
+    <div class="time-alert-msg" id="time-alert-msg">This lane's hour is up. Let the bowlers know and check if they'd like to extend their time.</div>
+    <div class="time-alert-actions">
+      <button class="btn btn-primary" onclick="dismissTimeAlert()">Got It</button>
+    </div>
+  </div>
+</div>
+
 <!-- MID-GAME PROMO (Frame 6) -->
 <div id="midgame-promo" onclick="dismissMidgamePromo()">
   <img id="midgame-promo-img" src="" alt="Promotion">
@@ -467,6 +491,7 @@ function initSetup() {
   addPlayerRow('Player 1'); addPlayerRow('Player 2');
   document.getElementById('header-actions').innerHTML = '';
   document.getElementById('lane-select').value = '';
+  resetInactivityTimer();
 }
 
 function addPlayerRow(name='') {
@@ -509,7 +534,9 @@ function startSession() {
   state.current = 0;
   state.currentGame = 0;
   state.done = false;
+  stopInactivityTimer();
   stopSlideshow();
+  startSessionTimers();
   document.getElementById('setup-screen').style.display = 'none';
   document.getElementById('game-screen').style.display = 'block';
   updateHeaderActions();
@@ -520,9 +547,11 @@ function startSession() {
 function updateHeaderActions() {
   document.getElementById('header-actions').innerHTML = `
     <span class="lane-badge"><span class="lane-badge-dot"></span>${state.lane ? 'Lane '+state.lane : 'Open Lane'}</span>
+    <span class="lane-badge" style="font-family:'Inter',sans-serif;font-size:13px;letter-spacing:0;color:var(--text-muted);">⏱ <span id="session-clock">00:00</span></span>
     <button class="btn btn-sm btn-ghost" onclick="confirmResetLane()" title="Reset lane for new group">↺ Reset</button>
     <button class="btn btn-sm" onclick="confirmEndSession()">End Session</button>
   `;
+  updateSessionClock();
 }
 
 function confirmResetLane() {
@@ -906,6 +935,8 @@ function playAgain() {
 function resetToSetup() {
   clearSavedState();
   stopSlideshow();
+  stopSessionTimers();
+  dismissTimeAlert();
   document.getElementById('game-screen').style.display='none';
   document.getElementById('promo-screen').classList.remove('show');
   document.getElementById('gameover-panel').classList.remove('show');
@@ -1104,6 +1135,105 @@ function dismissMidgamePromo() {
   document.getElementById('midgame-promo').classList.remove('show');
 }
 
+// ─── SESSION TIME ALERTS ─────────────────────────────────────────────
+let sessionStartTime = null;
+let timeAlert1Timer = null;
+let timeAlert2Timer = null;
+let headerClockTimer = null;
+
+function startSessionTimers() {
+  sessionStartTime = Date.now();
+  clearTimeout(timeAlert1Timer);
+  clearTimeout(timeAlert2Timer);
+  clearInterval(headerClockTimer);
+
+  // 1-hour alert
+  timeAlert1Timer = setTimeout(() => showTimeAlert(1), 60 * 60 * 1000);
+  // 2-hour alert
+  timeAlert2Timer = setTimeout(() => showTimeAlert(2), 2 * 60 * 60 * 1000);
+
+  // Update clock in header every second
+  headerClockTimer = setInterval(updateSessionClock, 1000);
+}
+
+function stopSessionTimers() {
+  clearTimeout(timeAlert1Timer);
+  clearTimeout(timeAlert2Timer);
+  clearInterval(headerClockTimer);
+  sessionStartTime = null;
+}
+
+function getElapsedTime() {
+  if (!sessionStartTime) return '';
+  const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+  const h = Math.floor(elapsed / 3600);
+  const m = Math.floor((elapsed % 3600) / 60);
+  const s = elapsed % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function updateSessionClock() {
+  const el = document.getElementById('session-clock');
+  if (el) el.textContent = getElapsedTime();
+}
+
+function showTimeAlert(hours) {
+  const isOne = hours === 1;
+  document.getElementById('time-alert-title').textContent = isOne ? '1 Hour Up!' : '2 Hours Up!';
+  document.getElementById('time-alert-lane').textContent = state.lane ? `Lane ${state.lane}` : 'Open Lane';
+  document.getElementById('time-alert-msg').textContent = isOne
+    ? 'This lane\'s hour is up. Let the bowlers know and check if they\'d like to extend their time.'
+    : 'This lane\'s two hours are up. Please check in with your guests about their time.';
+  playTimeAlert();
+  document.getElementById('time-alert').classList.add('show');
+}
+
+function dismissTimeAlert() {
+  document.getElementById('time-alert').classList.remove('show');
+}
+
+function playTimeAlert() {
+  try {
+    const ctx = getAudioCtx();
+    [0, 0.25, 0.5].forEach(delay => {
+      const osc = ctx.createOscillator(); const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.setValueAtTime(880, ctx.currentTime + delay);
+      gain.gain.setValueAtTime(0.35, ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.2);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + 0.2);
+    });
+  } catch(e) {}
+}
+
+// ─── INACTIVITY TIMER ────────────────────────────────────────────────
+const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes
+let inactivityTimer = null;
+
+function resetInactivityTimer() {
+  clearTimeout(inactivityTimer);
+  inactivityTimer = setTimeout(() => {
+    // Only trigger if we're on the setup screen and slideshow isn't already running
+    const setupVisible = document.getElementById('setup-screen').style.display !== 'none';
+    if (setupVisible && !slideshowActive) startSlideshow();
+  }, INACTIVITY_TIMEOUT);
+}
+
+function stopInactivityTimer() {
+  clearTimeout(inactivityTimer);
+  inactivityTimer = null;
+}
+
+// Listen for any interaction on the setup screen to reset the timer
+['touchstart', 'mousedown', 'keydown'].forEach(evt => {
+  document.addEventListener(evt, () => {
+    const setupVisible = document.getElementById('setup-screen').style.display !== 'none';
+    if (setupVisible && !slideshowActive) resetInactivityTimer();
+  }, { passive: true });
+});
+
 // ─── IDLE SLIDESHOW ──────────────────────────────────────────────────
 const SLIDE_COUNT = 10;
 const SLIDE_INTERVAL = 8000; // 8 seconds per slide
@@ -1181,7 +1311,7 @@ function stopSlideshow() {
 
 function dismissSlideshow() {
   stopSlideshow();
-  // setup screen is already visible underneath — staff can start a session
+  resetInactivityTimer();
 }
 
 // ─── PERSIST STATE ───────────────────────────────────────────────────
