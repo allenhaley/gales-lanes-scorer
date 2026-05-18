@@ -225,6 +225,7 @@
   #idle-slideshow.show { display: block; }
   .slide { position: absolute; inset: 0; background-size: cover; background-position: center; background-repeat: no-repeat; opacity: 0; transition: opacity 1.2s ease-in-out; }
   .slide.active { opacity: 1; }
+  .slide video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .slide-tap-hint { position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); font-family: 'Oswald', sans-serif; font-size: 13px; letter-spacing: 2px; color: rgba(255,255,255,0.35); text-transform: uppercase; pointer-events: none; animation: hintPulse 3s ease-in-out infinite; }
   @keyframes hintPulse { 0%,100%{opacity:0.35} 50%{opacity:0.7} }
   .slide-dots { position: absolute; bottom: 54px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; pointer-events: none; }
@@ -1488,8 +1489,11 @@ function stopInactivityTimer() {
 
 // ─── IDLE SLIDESHOW ──────────────────────────────────────────────────
 const SLIDE_COUNT = 10;
-const SLIDE_INTERVAL = 8000; // 8 seconds per slide
-let slideImages = [];       // loaded image URLs (only ones that exist)
+const IMAGE_DURATION = 8000;    // 8 seconds for still images
+const VIDEO_PLAY_SEC = 5;       // play video for up to 5 seconds
+const VIDEO_FREEZE_MS = 3000;   // then freeze last frame for 3 seconds
+
+let slideItems = [];  // [{url, type: 'image'|'video'}]
 let slideIndex = 0;
 let slideTimer = null;
 let slideshowActive = false;
@@ -1503,13 +1507,27 @@ async function checkImageExists(url) {
   });
 }
 
+async function checkVideoExists(url) {
+  return new Promise(resolve => {
+    const video = document.createElement('video');
+    video.onloadedmetadata = () => resolve(true);
+    video.onerror = () => resolve(false);
+    video.src = url + '?v=' + Date.now();
+  });
+}
+
 async function loadSlideImages() {
-  slideImages = [];
-  const checks = Array.from({length: SLIDE_COUNT}, (_, i) =>
-    resolveImageUrl(`promos/slide-${i+1}`)
-  );
+  slideItems = [];
+  const checks = Array.from({length: SLIDE_COUNT}, async (_, i) => {
+    const base = `promos/slide-${i+1}`;
+    const videoUrl = base + '.mp4';
+    if (await checkVideoExists(videoUrl)) return { url: videoUrl + '?v=' + Date.now(), type: 'video' };
+    const imgUrl = await resolveImageUrl(base);
+    if (imgUrl) return { url: imgUrl, type: 'image' };
+    return null;
+  });
   const results = await Promise.all(checks);
-  slideImages = results.filter(Boolean);
+  slideItems = results.filter(Boolean);
 }
 
 function buildSlideshow() {
@@ -1517,10 +1535,19 @@ function buildSlideshow() {
   const dots = document.getElementById('slide-dots');
   container.innerHTML = '';
   dots.innerHTML = '';
-  slideImages.forEach((url, i) => {
+  slideItems.forEach((item, i) => {
     const div = document.createElement('div');
     div.className = 'slide' + (i === 0 ? ' active' : '');
-    div.style.backgroundImage = `url('${url}')`;
+    if (item.type === 'video') {
+      const vid = document.createElement('video');
+      vid.src = item.url;
+      vid.muted = true;
+      vid.playsInline = true;
+      vid.preload = 'auto';
+      div.appendChild(vid);
+    } else {
+      div.style.backgroundImage = `url('${item.url}')`;
+    }
     container.appendChild(div);
     const dot = document.createElement('div');
     dot.className = 'slide-dot' + (i === 0 ? ' active' : '');
@@ -1531,32 +1558,73 @@ function buildSlideshow() {
 function showSlide(idx) {
   const slides = document.querySelectorAll('.slide');
   const dots = document.querySelectorAll('.slide-dot');
+
+  // Pause any previously playing videos
+  slides.forEach(s => {
+    const vid = s.querySelector('video');
+    if (vid) { vid.pause(); vid.currentTime = 0; }
+  });
+
   slides.forEach((s, i) => s.classList.toggle('active', i === idx));
   dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+
+  const currentSlide = slides[idx];
+  const vid = currentSlide ? currentSlide.querySelector('video') : null;
+
+  if (vid) {
+    // Video: play up to VIDEO_PLAY_SEC, freeze, then advance
+    vid.currentTime = 0;
+    vid.play().catch(() => {});
+    let freezeScheduled = false;
+
+    const freezeCheck = setInterval(() => {
+      if (!slideshowActive) { clearInterval(freezeCheck); return; }
+      if (!freezeScheduled && vid.currentTime >= VIDEO_PLAY_SEC) {
+        freezeScheduled = true;
+        vid.pause();
+        clearInterval(freezeCheck);
+        slideTimer = setTimeout(advanceSlide, VIDEO_FREEZE_MS);
+      }
+    }, 100);
+
+    // If video ends before VIDEO_PLAY_SEC, hold freeze then advance
+    vid.onended = () => {
+      if (freezeScheduled) return;
+      freezeScheduled = true;
+      clearInterval(freezeCheck);
+      if (!slideshowActive) return;
+      slideTimer = setTimeout(advanceSlide, VIDEO_FREEZE_MS);
+    };
+  } else {
+    // Image: show for IMAGE_DURATION then advance
+    slideTimer = setTimeout(advanceSlide, IMAGE_DURATION);
+  }
 }
 
-function nextSlide() {
-  if (slideImages.length === 0) return;
-  slideIndex = (slideIndex + 1) % slideImages.length;
+function advanceSlide() {
+  if (!slideshowActive) return;
+  slideIndex = (slideIndex + 1) % slideItems.length;
   showSlide(slideIndex);
 }
+
+function nextSlide() { advanceSlide(); }
 
 async function startSlideshow() {
   if (slideshowActive) return;
   await loadSlideImages();
-  if (slideImages.length === 0) return; // no slides uploaded, stay on setup
+  if (slideItems.length === 0) return;
   slideIndex = 0;
   buildSlideshow();
-  showSlide(0);
   slideshowActive = true;
   document.getElementById('idle-slideshow').classList.add('show');
-  slideTimer = setInterval(nextSlide, SLIDE_INTERVAL);
+  showSlide(0);
 }
 
 function stopSlideshow() {
   slideshowActive = false;
-  clearInterval(slideTimer);
+  clearTimeout(slideTimer);
   slideTimer = null;
+  document.querySelectorAll('#slide-container video').forEach(v => v.pause());
   document.getElementById('idle-slideshow').classList.remove('show');
 }
 
