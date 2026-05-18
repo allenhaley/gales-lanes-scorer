@@ -299,7 +299,7 @@
     <div id="player-list"></div>
     <button class="btn" id="add-player-btn">+ Add Player</button>
     <button class="btn btn-primary" id="start-btn" style="width:100%;font-size:16px;padding:14px;margin-top:4px;font-weight:600;">Start Session →</button>
-    <button class="btn" onclick="startSlideshow()" style="width:100%;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--text-muted);">
+    <button class="btn" onclick="manualStartSlideshow()" style="width:100%;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--text-muted);">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
       Start Slideshow
     </button>
@@ -1617,6 +1617,26 @@ async function startSlideshow() {
   if (slideshowActive) return;
   await loadSlideImages();
   if (slideItems.length === 0) return;
+  slideIndex = 0;
+  buildSlideshow();
+  slideshowActive = true;
+  document.getElementById('idle-slideshow').classList.add('show');
+  showSlide(0);
+}
+
+async function manualStartSlideshow() {
+  // If already running, just make sure it's visible
+  if (slideshowActive) {
+    document.getElementById('idle-slideshow').classList.add('show');
+    return;
+  }
+  // Reset and reload in case slides were added since last check
+  stopSlideshow();
+  await loadSlideImages();
+  if (slideItems.length === 0) {
+    toast('No slides found in promos/ folder');
+    return;
+  }
   slideIndex = 0;
   buildSlideshow();
   slideshowActive = true;
