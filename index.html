@@ -165,16 +165,6 @@
   .gameover-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
   .gameover-actions .btn { flex: 1; font-size: 15px; padding: 13px; min-width: 100px; }
 
-  /* Promo upload modal */
-  #promo-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 60; align-items: center; justify-content: center; padding: 24px; }
-  #promo-modal.show { display: flex; }
-  .promo-modal-card { background: var(--surface); border-radius: 16px; border: 1px solid var(--border); padding: 24px; width: 100%; max-width: 400px; }
-  .promo-modal-title { font-family: 'Oswald', sans-serif; font-size: 20px; letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 16px; }
-  .promo-slot { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-  .promo-slot:last-of-type { border-bottom: none; }
-  .promo-slot-label { font-size: 13px; color: var(--text-muted); flex: 1; }
-  .promo-thumb { width: 48px; height: 36px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); }
-  .promo-thumb.empty { background: var(--surface2); }
 
   /* QR Score modal */
   #qr-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 60; align-items: center; justify-content: center; padding: 24px; }
@@ -338,7 +328,8 @@
 
 <!-- BETWEEN-GAME PROMO SCREEN -->
 <div id="promo-screen">
-  <img id="promo-img" src="" alt="Promotion">
+  <img id="promo-img" src="" alt="Promotion" style="display:none;">
+  <video id="promo-video" muted playsinline style="display:none;max-width:90vw;max-height:60vh;object-fit:contain;border-radius:12px;"></video>
   <div class="promo-game-info" id="promo-game-info"></div>
   <div class="promo-scores" id="promo-scores"></div>
   <div class="promo-actions">
@@ -442,7 +433,8 @@
 
 <!-- MID-GAME PROMO (Frame 6) -->
 <div id="midgame-promo" onclick="dismissMidgamePromo()">
-  <img id="midgame-promo-img" src="" alt="Promotion">
+  <img id="midgame-promo-img" src="" alt="Promotion" style="display:none;">
+  <video id="midgame-promo-video" muted playsinline style="display:none;max-width:min(90vw,860px);max-height:70vh;object-fit:contain;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.6);"></video>
   <div class="midgame-promo-bar"><div class="midgame-promo-bar-fill" id="midgame-promo-bar-fill"></div></div>
   <div class="midgame-promo-close">Tap anywhere to close</div>
 </div>
@@ -486,8 +478,16 @@ async function resolveImageUrl(base) {
   }
   return null;
 }
-let promoUploadSlot = 0;
 
+// Try .mp4 first, then images — returns {url, type}
+async function resolveMediaUrl(base) {
+  if (!base) return null;
+  const videoUrl = base + '.mp4';
+  if (await checkVideoExists(videoUrl)) return { url: videoUrl + '?v=' + Date.now(), type: 'video' };
+  const imgUrl = await resolveImageUrl(base);
+  if (imgUrl) return { url: imgUrl, type: 'image' };
+  return null;
+}
 // Audio context for sounds
 let audioCtx = null;
 function getAudioCtx() {
@@ -751,7 +751,7 @@ function renderTabs() {
     let lastScore = '–';
     for (let j=9;j>=0;j--) { if (typeof frames[j]?.cumScore==='number') { lastScore=frames[j].cumScore; break; } }
     const isCurrent = i===state.current&&!state.done;
-    return `<div class="player-tab ${i===state.current?'active':''} ${isCurrent?'current-turn':''}" onclick="viewPlayer(${i})">
+    return `<div class="player-tab ${i===state.current?'active':''} ${isCurrent?'current-turn':''}" onclick="renderScorecard()">
       <span class="tab-dot" style="background:${p.color}"></span>
       <span class="tab-name">${p.name}</span>
       <span class="tab-score">${lastScore}</span>
@@ -876,7 +876,6 @@ function scrollToTab(idx) {
   if (tab) tab.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
 }
 
-function viewPlayer(i) { renderScorecard(); }
 
 // ─── GAME OVER / BETWEEN GAMES ───────────────────────────────────────
 function checkGameOver() {
@@ -902,10 +901,19 @@ function getPlayerGameScore(p, gameIdx) {
 async function showPromoBetweenGames() {
   const gIdx = state.currentGame;
   const img = document.getElementById('promo-img');
-  const url = await resolveImageUrl(PROMO_BASES[gIdx]);
-  img.onload = () => { img.style.display = 'block'; };
-  img.onerror = () => { img.style.display = 'none'; };
-  if (url) { img.src = url; img.style.display = 'block'; } else { img.style.display = 'none'; }
+  const vid = document.getElementById('promo-video');
+  // Reset both
+  img.style.display = 'none'; vid.style.display = 'none'; vid.pause();
+  const media = await resolveMediaUrl(PROMO_BASES[gIdx]);
+  if (media) {
+    if (media.type === 'video') {
+      vid.src = media.url; vid.loop = true; vid.style.display = 'block'; vid.currentTime = 0; vid.play().catch(() => {});
+    } else {
+      img.onload = () => { img.style.display = 'block'; };
+      img.onerror = () => { img.style.display = 'none'; };
+      img.src = media.url; img.style.display = 'block';
+    }
+  }
 
   document.getElementById('promo-game-info').textContent = `GAME ${gIdx+1} COMPLETE`;
   document.getElementById('promo-next-num').textContent = gIdx+2;
@@ -927,6 +935,8 @@ async function showPromoBetweenGames() {
 
 function startNextGame() {
   document.getElementById('promo-screen').classList.remove('show');
+  const pv = document.getElementById('promo-video');
+  if (pv) { pv.pause(); pv.src = ''; }
   state.currentGame++;
   state.current = 0;
   state.done = false;
@@ -962,7 +972,6 @@ function showFinalResults() {
 
 function newSession() {
   document.getElementById('gameover-panel').classList.remove('show');
-  clearSavedState();
   resetToSetup();
 }
 
@@ -1135,11 +1144,9 @@ document.getElementById('new-player-name').addEventListener('keydown', e => {
 });
 
 // ─── MID-GAME PROMO (FRAME 6) ────────────────────────────────────────
-// One image per game: promos/midgame-1.jpg, midgame-2.jpg, midgame-3.jpg
-const MIDGAME_PROMO_URLS = ['promos/midgame-1.jpg', null, null]; // Only game 1 midgame promo active
 const MIDGAME_FRAME = 5; // 0-indexed, so frame 6
 const MIDGAME_DURATION = 8000; // 8 seconds
-let midgamePromoShownForGame = [-1]; // track which games have shown the promo
+let midgamePromoShownForGame = []; // track which games have shown the promo
 let midgamePromoTimer = null;
 
 function hasFrame6BeenReached() {
@@ -1158,10 +1165,19 @@ function shouldShowMidgamePromo() {
 async function showMidgamePromo() {
   midgamePromoShownForGame.push(state.currentGame);
   const img = document.getElementById('midgame-promo-img');
-  const url = await resolveImageUrl(MIDGAME_BASES[state.currentGame]);
-  img.onload = () => { img.style.display = 'block'; };
-  img.onerror = () => { img.style.display = 'none'; };
-  if (url) { img.src = url; img.style.display = 'block'; } else { img.style.display = 'none'; }
+  const vid = document.getElementById('midgame-promo-video');
+  // Reset both
+  img.style.display = 'none'; vid.style.display = 'none'; vid.pause();
+  const media = await resolveMediaUrl(MIDGAME_BASES[state.currentGame]);
+  if (media) {
+    if (media.type === 'video') {
+      vid.src = media.url; vid.loop = true; vid.style.display = 'block'; vid.currentTime = 0; vid.play().catch(() => {});
+    } else {
+      img.onload = () => { img.style.display = 'block'; };
+      img.onerror = () => { img.style.display = 'none'; };
+      img.src = media.url; img.style.display = 'block';
+    }
+  }
 
   // Reset and start countdown bar
   const bar = document.getElementById('midgame-promo-bar-fill');
@@ -1176,6 +1192,8 @@ async function showMidgamePromo() {
 function dismissMidgamePromo() {
   clearTimeout(midgamePromoTimer);
   document.getElementById('midgame-promo').classList.remove('show');
+  const vid = document.getElementById('midgame-promo-video');
+  if (vid) { vid.pause(); vid.src = ''; }
 }
 
 // ─── SESSION TIME ALERTS ─────────────────────────────────────────────
@@ -1278,15 +1296,13 @@ function buildScoreUrl() {
   return `https://scorer.galeslanes.com/scores.html#${encoded}`;
 }
 
-let qrInstance = null;
-
 function showQrModal() {
   const url = buildScoreUrl();
   const container = document.getElementById('qr-code-container');
   container.innerHTML = '';
 
   // Generate QR code
-  qrInstance = new QRCode(container, {
+  new QRCode(container, {
     text: url,
     width: 220,
     height: 220,
