@@ -6,6 +6,7 @@
 <title>Gale's Lanes — Scorer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Inter:wght@300;400;500;600&family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   :root {
     --red: #B23A2F; --red-dark: #8a2c22;
@@ -175,6 +176,22 @@
   .promo-thumb { width: 48px; height: 36px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); }
   .promo-thumb.empty { background: var(--surface2); }
 
+  /* QR Score modal */
+  #qr-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 60; align-items: center; justify-content: center; padding: 24px; }
+  #qr-modal.show { display: flex; }
+  .qr-card { background: var(--surface); border-radius: 16px; border: 1px solid var(--border); padding: 28px 24px; width: 100%; max-width: 400px; text-align: center; }
+  .qr-title { font-family: 'Oswald', sans-serif; font-size: 20px; letter-spacing: 2px; color: var(--gold); margin-bottom: 4px; text-transform: uppercase; }
+  .qr-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
+  #qr-code-container { display: flex; justify-content: center; margin-bottom: 16px; }
+  #qr-code-container canvas, #qr-code-container img { border-radius: 8px; border: 6px solid #fff; }
+  .qr-player-list { text-align: left; margin-bottom: 20px; border-top: 1px solid var(--border); padding-top: 14px; }
+  .qr-player-item { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; }
+  .qr-player-name { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; }
+  .qr-player-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .qr-player-score { font-family: 'Oswald', sans-serif; font-size: 18px; color: var(--text); }
+  .qr-actions { display: flex; gap: 10px; margin-top: 4px; }
+  .qr-actions .btn { flex: 1; padding: 12px; font-size: 14px; }
+
   /* Footer bar */
   .social-bar { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 14px 20px; border-top: 1px solid var(--border); background: var(--surface); flex-wrap: wrap; }
   .social-link { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 500; color: var(--text-muted); text-decoration: none; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border); transition: color 0.15s, border-color 0.15s, background 0.15s; }
@@ -298,9 +315,13 @@
 <div id="game-screen">
   <div id="game-tabs-row">
     <div id="game-tabs"></div>
+    <button class="export-btn" onclick="showQrModal()" style="background:var(--surface2);border-color:rgba(200,164,77,0.3);color:var(--gold);">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/></svg>
+      Scores QR
+    </button>
     <button class="export-btn" onclick="exportScores()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Export Scores
+      Export PNG
     </button>
   </div>
   <div id="player-tabs"></div>
@@ -330,6 +351,20 @@
   </div>
 </div>
 
+<!-- QR SCORE MODAL -->
+<div id="qr-modal">
+  <div class="qr-card">
+    <div class="qr-title">Scan for Your Scores</div>
+    <div class="qr-subtitle">Point your phone camera at this QR code to save your score card.</div>
+    <div id="qr-code-container"></div>
+    <div class="qr-player-list" id="qr-player-list"></div>
+    <div class="qr-actions">
+      <button class="btn btn-ghost" onclick="closeQrModal()">Close</button>
+      <button class="btn btn-primary" onclick="closeQrModal()">Done</button>
+    </div>
+  </div>
+</div>
+
 <!-- EDIT MODAL -->
 <div id="edit-modal">
   <div class="edit-card">
@@ -353,9 +388,9 @@
     <div class="gameover-actions">
       <button class="btn" onclick="newSession()">New Session</button>
       <button class="btn btn-primary" onclick="playAgain()">Same Players</button>
-      <button class="btn" onclick="exportScores()" style="display:flex;align-items:center;gap:6px;">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Export
+      <button class="btn btn-gold" onclick="showQrModal()" style="display:flex;align-items:center;gap:6px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><rect x="19" y="14" width="2" height="2"/><rect x="14" y="19" width="2" height="2"/><rect x="19" y="19" width="2" height="2"/></svg>
+        Get Scores
       </button>
     </div>
     <div class="social-bar" style="background:transparent;border:none;padding:12px 0 0;gap:12px;">
@@ -1210,6 +1245,90 @@ function playTimeAlert() {
     });
   } catch(e) {}
 }
+
+// ─── QR SCORE MODAL ──────────────────────────────────────────────────
+function buildScoreUrl() {
+  // Encode all scores into a URL that opens a nicely formatted summary page
+  // hosted right on scorer.galeslanes.com via a hash fragment
+  const data = {
+    lane: state.lane,
+    date: new Date().toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'}),
+    players: state.players.map(p => ({
+      name: p.name,
+      color: p.color,
+      games: p.games.map((rolls, gi) => {
+        const frames = getFrameData(rolls);
+        let total = 0;
+        for (let i=9;i>=0;i--) { if (typeof frames[i]?.cumScore==='number') { total=frames[i].cumScore; break; } }
+        return total;
+      }),
+      total: [0,1,2].reduce((sum,gi) => {
+        const frames = getFrameData(p.games[gi]);
+        for (let i=9;i>=0;i--) { if (typeof frames[i]?.cumScore==='number') return sum+frames[i].cumScore; }
+        return sum;
+      }, 0)
+    }))
+  };
+  const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
+  return `https://scorer.galeslanes.com/scores.html#${encoded}`;
+}
+
+let qrInstance = null;
+
+function showQrModal() {
+  const url = buildScoreUrl();
+  const container = document.getElementById('qr-code-container');
+  container.innerHTML = '';
+
+  // Generate QR code
+  qrInstance = new QRCode(container, {
+    text: url,
+    width: 220,
+    height: 220,
+    colorDark: '#111111',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+
+  // Build player score summary
+  const sorted = [...state.players].map(p => ({
+    name: p.name,
+    color: p.color,
+    scores: p.games.map((rolls, gi) => {
+      const frames = getFrameData(rolls);
+      for (let i=9;i>=0;i--) { if (typeof frames[i]?.cumScore==='number') return frames[i].cumScore; }
+      return 0;
+    }),
+    total: [0,1,2].reduce((sum,gi) => {
+      const frames = getFrameData(p.games[gi]);
+      for (let i=9;i>=0;i--) { if (typeof frames[i]?.cumScore==='number') return sum+frames[i].cumScore; }
+      return sum;
+    }, 0)
+  })).sort((a,b) => b.total - a.total);
+
+  document.getElementById('qr-player-list').innerHTML = sorted.map(p =>
+    `<div class="qr-player-item">
+      <div class="qr-player-name">
+        <div class="qr-player-dot" style="background:${p.color}"></div>
+        ${p.name}
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <span style="font-size:11px;color:var(--text-dim);">${p.scores.join(' · ')}</span>
+        <span class="qr-player-score">${p.total}</span>
+      </div>
+    </div>`
+  ).join('');
+
+  document.getElementById('qr-modal').classList.add('show');
+}
+
+function closeQrModal() {
+  document.getElementById('qr-modal').classList.remove('show');
+}
+
+document.getElementById('qr-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('qr-modal')) closeQrModal();
+});
 
 // ─── EXPORT SCORES ───────────────────────────────────────────────────
 function exportScores() {
