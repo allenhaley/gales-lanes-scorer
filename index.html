@@ -77,6 +77,10 @@
   .player-tab { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); cursor: pointer; white-space: nowrap; transition: all 0.15s; flex-shrink: 0; }
   .player-tab.active { background: var(--surface3); border-color: rgba(255,255,255,0.2); }
   .player-tab.current-turn { border-color: var(--red); }
+  .player-tab.current-turn .tab-name { color: var(--text); font-weight: 600; }
+  .player-tab.current-turn .tab-score { color: var(--red); }
+  .player-tab.current-turn .tab-dot { outline: none; }
+  .player-tab.current-turn .turn-arrow { color: var(--red); }
   .player-tab .tab-name { font-size: 14px; font-weight: 500; }
   .player-tab .tab-score { font-family: 'Oswald', sans-serif; font-size: 18px; letter-spacing: 0.5px; color: var(--red); }
   .tab-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
@@ -91,7 +95,15 @@
   .sc-cell:last-child { border-right: none; }
   .sc-player-row { display: grid; grid-template-columns: 100px repeat(9, 1fr) 1.4fr; border-bottom: 1px solid var(--border); transition: background 0.15s; }
   .sc-player-row:last-child { border-bottom: none; }
-  .sc-player-row.active-player { background: rgba(178,58,47,0.07); }
+  .sc-player-row.active-player { background: rgba(245,242,233,0.15); }
+  .sc-player-row.active-player .sc-name { color: var(--text); }
+  .sc-player-row.active-player .sc-ball { color: var(--text-muted); }
+  .sc-player-row.active-player .sc-ball.strike { color: var(--red); }
+  .sc-player-row.active-player .sc-ball.spare { color: var(--amber); }
+  .sc-player-row.active-player .sc-cumulative { color: var(--text); }
+  .sc-player-row.active-player .sc-cumulative.pending { color: var(--text-dim); }
+  .sc-player-row.active-player .sc-frame { border-right-color: rgba(255,255,255,0.1); }
+  .sc-player-row.active-player .sc-name { border-right-color: rgba(255,255,255,0.1); }
   .sc-name { display: flex; align-items: center; gap: 8px; padding: 10px 12px; font-size: 13px; font-weight: 500; border-right: 1px solid var(--border); }
   .sc-name-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .sc-frame { display: flex; flex-direction: column; align-items: center; border-right: 1px solid var(--border); min-height: 54px; position: relative; }
