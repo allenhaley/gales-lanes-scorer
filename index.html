@@ -120,7 +120,7 @@
   .edit-hint { font-size: 11px; color: var(--text-dim); text-align: center; padding: 6px 0 0; letter-spacing: 0.3px; }
 
   /* Pin panel */
-  #current-panel { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); padding: 12px 16px 20px; z-index: 20; }
+  #current-panel { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); padding: 12px 16px; padding-bottom: max(20px, env(safe-area-inset-bottom)); z-index: 20; }
   .current-info { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
   .current-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   .current-name { font-size: 16px; font-weight: 600; }
@@ -195,7 +195,7 @@
   .qr-actions .btn { flex: 1; padding: 12px; font-size: 14px; }
 
   /* Footer bar */
-  .social-bar { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 14px 20px; border-top: 1px solid var(--border); background: var(--surface); flex-wrap: wrap; }
+  .social-bar { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 16px; padding-bottom: max(12px, env(safe-area-inset-bottom)); border-top: 1px solid var(--border); background: var(--surface); flex-wrap: wrap; }
   .social-link { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 500; color: var(--text-muted); text-decoration: none; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border); transition: color 0.15s, border-color 0.15s, background 0.15s; }
   .social-link:hover { color: var(--text); border-color: rgba(255,255,255,0.2); background: var(--surface2); }
   .social-link svg { flex-shrink: 0; }
@@ -225,7 +225,7 @@
   /* Idle slideshow */
   #idle-slideshow { display: none; position: fixed; inset: 0; background: #000; z-index: 80; cursor: pointer; }
   #idle-slideshow.show { display: block; }
-  .slide { position: absolute; inset: 0; background-size: cover; background-position: center; background-repeat: no-repeat; opacity: 0; transition: opacity 1.2s ease-in-out; }
+  .slide { position: absolute; inset: 0; background-size: contain; background-position: center; background-repeat: no-repeat; background-color: #000; opacity: 0; transition: opacity 1.2s ease-in-out; }
   .slide.active { opacity: 1; }
   .slide video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .slide-tap-hint { position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); font-family: 'Oswald', sans-serif; font-size: 13px; letter-spacing: 2px; color: rgba(255,255,255,0.35); text-transform: uppercase; pointer-events: none; animation: hintPulse 3s ease-in-out infinite; }
@@ -716,7 +716,7 @@ function renderAll() {
   renderTabs();
   renderScorecard();
   renderCurrentPanel();
-  checkGameOver();
+  // Note: checkGameOver is NOT called here to prevent auto-trigger when reviewing past games
 }
 
 function renderGameTabs() {
@@ -763,7 +763,7 @@ function renderTabs() {
     let lastScore = '–';
     for (let j=9;j>=0;j--) { if (typeof frames[j]?.cumScore==='number') { lastScore=frames[j].cumScore; break; } }
     const isCurrent = i===state.current&&!state.done;
-    return `<div class="player-tab ${i===state.current?'active':''} ${isCurrent?'current-turn':''}" onclick="renderScorecard()">
+    return `<div class="player-tab ${i===state.current?'active':''} ${isCurrent?'current-turn':''}" onclick="setCurrentPlayer(${i})">
       <span class="tab-dot" style="background:${p.color}"></span>
       <span class="tab-name">${p.name}</span>
       <span class="tab-score">${lastScore}</span>
@@ -809,7 +809,7 @@ function renderCurrentPanel() {
   if (state.done) { panel.innerHTML=''; return; }
   const p = state.players[state.current];
   const pos = getCurrentFrameAndBall(p);
-  if (!pos) { advancePlayer(); return; }
+  if (!pos) { return; } // player done — advancePlayer handled by recordRoll only
   const {frame,ball,pinsLeft} = pos;
   let buttons='';
   for (let v=0;v<=10;v++) {
@@ -849,43 +849,69 @@ function recordRoll(pins) {
   const playerGameDone = isPlayerDone(p);
   const justFinishedFrame = pos===null||(pos.ball===0);
 
-  if (playerGameDone||justFinishedFrame) {
-    renderAll();
-    if (!playerGameDone) {
-      setTimeout(() => {
-        state.current=getNextPlayer();
-        renderAll();
-        scrollToTab(state.current);
-        if (shouldShowMidgamePromo()) showMidgamePromo();
-      }, 350);
+  if (playerGameDone) {
+    // This player finished the game — find next or end game
+    const next = findNextActivePlayer();
+    if (next === -1) {
+      state.done = true;
+      renderAll();
+      showGameOver();
     } else {
-      advancePlayer();
+      state.current = next;
+      renderAll();
+      scrollToTab(state.current);
     }
+  } else if (justFinishedFrame) {
+    // Frame complete — move to next player
+    const next = findNextActivePlayer();
+    if (next !== -1) state.current = next;
+    renderAll();
+    scrollToTab(state.current);
+    if (shouldShowMidgamePromo()) showMidgamePromo();
   } else {
+    // Mid-frame (second ball) — stay on same player
     renderAll();
   }
 }
 
-function getNextPlayer() {
-  const total=state.players.length; let next=(state.current+1)%total, tries=0;
-  while (tries<total) { if (!isPlayerDone(state.players[next])) return next; next=(next+1)%total; tries++; }
-  return state.current;
+// Single source of truth for next player — always cycles forward from current
+function findNextActivePlayer() {
+  const total = state.players.length;
+  let next = (state.current + 1) % total;
+  for (let tries = 0; tries < total; tries++) {
+    if (!isPlayerDone(state.players[next])) return next;
+    next = (next + 1) % total;
+  }
+  return -1; // all done
 }
 
+// Keep advancePlayer for backward compatibility (edit modal etc)
 function advancePlayer() {
-  const total=state.players.length; let next=(state.current+1)%total, tries=0;
-  while (tries<total) {
-    if (!isPlayerDone(state.players[next])) {
-      state.current=next; renderAll(); scrollToTab(next); return;
-    }
-    next=(next+1)%total; tries++;
-  }
-  state.done=true; renderAll(); showGameOver();
+  const next = findNextActivePlayer();
+  if (next === -1) { state.done = true; renderAll(); showGameOver(); return; }
+  state.current = next; renderAll(); scrollToTab(next);
+}
+
+function getNextPlayer() { // legacy alias
+  const next = findNextActivePlayer();
+  return next === -1 ? state.current : next;
 }
 
 function scrollToTab(idx) {
   const tabs=document.getElementById('player-tabs'); const tab=tabs.children[idx];
   if (tab) tab.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+}
+
+// Allow staff to manually select which player is up
+function setCurrentPlayer(idx) {
+  if (state.done) return;
+  if (isPlayerDone(state.players[idx])) {
+    toast(`${state.players[idx].name} has already finished`);
+    return;
+  }
+  state.current = idx;
+  renderAll();
+  scrollToTab(idx);
 }
 
 
