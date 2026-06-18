@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gale's Lanes">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Gale's Lanes — Scorer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Inter:wght@300;400;500;600&family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -556,10 +560,11 @@ function addPlayerRow(name='') {
   const color = PLAYER_COLORS[idx];
   const row = document.createElement('div');
   row.className = 'player-row';
+  const defaultName = name || `Player ${idx + 1}`;
   row.innerHTML = `
     <div class="color-dot" style="background:${color}"></div>
-    <input type="text" placeholder="${name||'Player '+(idx+1)}" maxlength="16" value="${name}" autocomplete="off" spellcheck="false">
-    ${idx>=1?`<button class="btn btn-ghost btn-sm" onclick="removePlayerRow(this)">✕</button>`:''}
+    <input type="text" placeholder="${defaultName}" maxlength="16" value="" autocomplete="off" spellcheck="false">
+    ${idx >= 1 ? `<button class="btn btn-ghost btn-sm" onclick="removePlayerRow(this)">✕</button>` : ''}
   `;
   list.appendChild(row);
 }
@@ -580,7 +585,8 @@ function startSession() {
   const rows = document.querySelectorAll('.player-row');
   const players = [];
   rows.forEach((row, i) => {
-    const n = row.querySelector('input').value.trim() || `Player ${i+1}`;
+    const input = row.querySelector('input');
+    const n = input.value.trim() || input.placeholder || `Player ${i+1}`;
     players.push({ name: n, color: PLAYER_COLORS[i], games: [[], [], []] });
   });
   if (players.length < 1) return toast('Add at least one player');
