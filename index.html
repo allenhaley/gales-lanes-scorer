@@ -628,32 +628,63 @@ function getRolls(p) { return p.games[state.currentGame]; }
 function getFrameData(rolls) {
   const frames = []; let ri = 0;
   for (let f = 0; f < 10; f++) {
-    if (ri >= rolls.length) { frames.push({balls:[], cumScore:null}); continue; }
-    const isLast = f === 9; let balls = [], score = null;
+    // No more rolls — remaining frames are empty
+    if (ri >= rolls.length) {
+      frames.push({balls:[], cumScore:null});
+      continue;
+    }
+    const isLast = f === 9;
+    let balls = [], score = null;
     if (!isLast) {
       const b1 = rolls[ri];
+      if (b1 === undefined) { frames.push({balls:[], cumScore:null}); continue; }
       if (b1 === 10) {
+        // Strike — need 2 more balls to score
         balls = [10];
-        if (rolls.length > ri+2) score = 10 + rolls[ri+1] + rolls[ri+2];
+        const bonus1 = rolls[ri+1], bonus2 = rolls[ri+2];
+        if (bonus1 !== undefined && bonus2 !== undefined) score = 10 + bonus1 + bonus2;
         ri += 1;
       } else {
         const b2 = rolls[ri+1];
-        if (b2===undefined) { balls=[b1]; frames.push({balls,cumScore:null}); continue; }
-        balls = [b1,b2];
-        if (b1+b2===10) { if (rolls.length>ri+2) score=10+rolls[ri+2]; } else { score=b1+b2; }
+        if (b2 === undefined) {
+          // Only first ball bowled this frame
+          balls = [b1];
+          frames.push({balls, cumScore:null});
+          ri += 1;
+          continue;
+        }
+        balls = [b1, b2];
+        if (b1 + b2 === 10) {
+          // Spare — need 1 more ball to score
+          const bonus = rolls[ri+2];
+          if (bonus !== undefined) score = 10 + bonus;
+        } else {
+          score = b1 + b2;
+        }
         ri += 2;
       }
     } else {
-      balls = rolls.slice(ri,ri+3);
-      if (balls.length>=2) {
-        const [a,b,c]=balls;
-        if (a===10||a+b===10) { if (c!==undefined) score=a+b+(c||0); } else { score=a+b; }
+      // 10th frame — up to 3 balls
+      balls = rolls.slice(ri, ri+3);
+      if (balls.length >= 2) {
+        const [a, b, c] = balls;
+        if (a === 10 || a + b === 10) {
+          if (c !== undefined) score = a + b + c;
+        } else {
+          score = a + b;
+        }
       }
     }
-    frames.push({balls, cumScore:score});
+    frames.push({balls, cumScore: score});
   }
-  let running=0;
-  frames.forEach(fr => { if (fr.cumScore!==null) { running+=fr.cumScore; fr.cumScore=running; } });
+  // Build running cumulative totals
+  let running = 0;
+  frames.forEach(fr => {
+    if (fr.cumScore !== null) {
+      running += fr.cumScore;
+      fr.cumScore = running;
+    }
+  });
   return frames;
 }
 
@@ -821,9 +852,12 @@ function renderCurrentPanel() {
   for (let v=0;v<=10;v++) {
     const disabled = v>pinsLeft?'disabled':'';
     let extraCls='';
-    if (v===10&&pinsLeft===10) extraCls='strike-btn';
-    if (v===pinsLeft&&ball>0&&pinsLeft<10) extraCls='spare-btn';
-    const label = (v===10&&pinsLeft===10)?'X':(v===pinsLeft&&ball>0&&pinsLeft<10)?'/':String(v);
+    const isStrike = v===10 && pinsLeft===10 && ball===0;
+    const isSpare  = v===pinsLeft && ball>0 && pinsLeft<10;
+    const isSpareAll = v===10 && pinsLeft===10 && ball>0; // e.g. gutter ball then all 10
+    if (isStrike) extraCls='strike-btn';
+    if (isSpare || isSpareAll) extraCls='spare-btn';
+    const label = isStrike ? 'X' : (isSpare || isSpareAll) ? '/' : String(v);
     buttons+=`<button class="pin-btn ${extraCls} ${disabled}" onclick="recordRoll(${v})">${label}</button>`;
   }
   panel.innerHTML = `
@@ -1084,11 +1118,13 @@ function renderEditModal() {
   for (let v=0;v<=10;v++) {
     const disabled=v>pinsLeft?'disabled':'';
     let extraCls='';
-    if (v===10&&pinsLeft===10) extraCls='strike-btn';
-    if (v===pinsLeft&&newRolls.length>0&&pinsLeft<10) extraCls='spare-btn';
-    let label=String(v);
-    if (v===10&&pinsLeft===10) label='X';
-    else if (v===pinsLeft&&newRolls.length>0&&pinsLeft<10) label='/';
+    const editBall = newRolls.length;
+    const isStrike  = v===10 && pinsLeft===10 && editBall===0;
+    const isSpare   = v===pinsLeft && editBall>0 && pinsLeft<10;
+    const isSpareAll = v===10 && pinsLeft===10 && editBall>0;
+    if (isStrike) extraCls='strike-btn';
+    if (isSpare || isSpareAll) extraCls='spare-btn';
+    const label = isStrike ? 'X' : (isSpare || isSpareAll) ? '/' : String(v);
     buttons+=`<button class="pin-btn ${extraCls} ${disabled}" onclick="editRecordRoll(${v})">${label}</button>`;
   }
   document.getElementById('edit-pin-grid').innerHTML=buttons;
