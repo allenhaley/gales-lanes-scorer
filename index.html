@@ -1101,16 +1101,51 @@ function getRollStartForFrame(rolls, frameIdx) {
   return ri;
 }
 
+function getRollCountForFrame(rolls, frameIdx) {
+  // Returns how many rolls belong to the frame at frameIdx
+  let ri = 0;
+  for (let f = 0; f < frameIdx; f++) {
+    if (ri >= rolls.length) return 0;
+    const b1 = rolls[ri];
+    if (b1 === 10) { ri += 1; }
+    else { ri += 2; }
+  }
+  const start = ri;
+  if (frameIdx === 9) {
+    // 10th frame: 2 or 3 balls
+    const b10 = rolls.slice(ri);
+    const [a, b, c] = b10;
+    if (a === undefined) return 0;
+    if (a === 10 || (b !== undefined && a + b === 10)) return Math.min(b10.length, 3);
+    return Math.min(b10.length, 2);
+  }
+  if (ri >= rolls.length) return 0;
+  return rolls[ri] === 10 ? 1 : 2;
+}
+
 function openEditModal(playerIdx, frameIdx) {
   // Always allow editing — including after game ends
   const p = state.players[playerIdx];
   const rolls = p.games[state.currentGame];
   const rollStart = getRollStartForFrame(rolls, frameIdx);
-  editState = { playerIdx, frameIdx, rollStart, originalRolls:[...rolls], newRolls:[], ball:0, pinsLeft:10, wasGameDone: state.done };
-  state.done = false; // temporarily re-open game so scoring logic works
+  const rollCount = getRollCountForFrame(rolls, frameIdx);
+  const rollsAfter = rolls.slice(rollStart + rollCount); // preserve future frames
+
+  editState = {
+    playerIdx, frameIdx, rollStart, rollCount,
+    originalRolls: [...rolls],
+    rollsAfter,     // rolls from frames AFTER this one — kept intact
+    newRolls: [], ball: 0, pinsLeft: 10,
+    wasGameDone: state.done
+  };
+
+  // Temporarily set rolls to just the frames BEFORE this one
+  // so the edit modal can build on top cleanly
   p.games[state.currentGame] = rolls.slice(0, rollStart);
+  state.done = false;
+
   document.getElementById('edit-title').textContent = `EDIT · ${p.name} · FRAME ${frameIdx+1}`;
-  document.getElementById('edit-subtitle').textContent = 'Scores from this frame forward will be recalculated';
+  document.getElementById('edit-subtitle').textContent = 'Only this frame will change — future frames are preserved';
   renderEditModal();
   document.getElementById('edit-modal').classList.add('show');
 }
@@ -1147,41 +1182,60 @@ function renderEditModal() {
 
 function editRecordRoll(pins) {
   if (!editState) return;
-  const {frameIdx,newRolls}=editState;
-  const isLast=frameIdx===9;
+  const { frameIdx, newRolls, rollStart, rollsAfter } = editState;
+  const isLast = frameIdx === 9;
   newRolls.push(pins);
-  const [a,b,c]=newRolls; let done=false;
+  const [a, b, c] = newRolls;
+  let done = false;
+
   if (!isLast) {
-    if (newRolls.length===1&&a===10) done=true;
-    else if (newRolls.length===2) done=true;
-    else editState.pinsLeft=10-a;
+    if (newRolls.length === 1 && a === 10) { done = true; }
+    else if (newRolls.length === 2) { done = true; }
+    else { editState.pinsLeft = 10 - a; }
   } else {
-    if (newRolls.length===1) editState.pinsLeft=a===10?10:10-a;
-    else if (newRolls.length===2) {
-      if (a===10&&b===10) editState.pinsLeft=10;
-      else if (a===10) editState.pinsLeft=10-b;
-      else if (a+b===10) editState.pinsLeft=10;
-      else done=true;
-    } else if (newRolls.length===3) done=true;
+    if (newRolls.length === 1) {
+      editState.pinsLeft = a === 10 ? 10 : 10 - a;
+    } else if (newRolls.length === 2) {
+      if (a === 10 && b === 10) editState.pinsLeft = 10;
+      else if (a === 10) editState.pinsLeft = 10 - b;
+      else if (a + b === 10) editState.pinsLeft = 10;
+      else done = true;
+    } else if (newRolls.length === 3) { done = true; }
   }
-  const p=state.players[editState.playerIdx];
-  p.games[state.currentGame]=[...p.games[state.currentGame],...newRolls];
+
+  const p = state.players[editState.playerIdx];
+
   if (done) {
+    // Splice the new rolls in, then restore all rolls from future frames
+    p.games[state.currentGame] = [
+      ...p.games[state.currentGame].slice(0, rollStart), // before this frame
+      ...newRolls,                                        // this frame (edited)
+      ...rollsAfter                                       // future frames — unchanged
+    ];
+    saveState();
     const wasDone = editState.wasGameDone;
     closeEditModal();
     const allDone = state.players.every(pp => isPlayerDone(pp));
     if (allDone) {
       state.done = true;
       renderAll();
-      if (wasDone) showGameOver(); // re-show leaderboard if game was already done
+      if (wasDone) showGameOver();
     } else {
       state.done = false;
       if (!isPlayerDone(p)) state.current = editState.playerIdx;
-      else state.current = getNextPlayer();
+      else state.current = findNextActivePlayer() !== -1 ? findNextActivePlayer() : 0;
       renderAll();
     }
   } else {
-    p.games[state.currentGame]=p.games[state.currentGame].slice(0,editState.rollStart);
+    // Mid-frame: update rolls temporarily for live scorecard preview
+    p.games[state.currentGame] = [
+      ...p.games[state.currentGame].slice(0, rollStart),
+      ...newRolls,
+      ...rollsAfter
+    ];
+    renderScorecard(); // show live update of scorecard while editing
+    // Reset to just pre-frame for next button tap
+    p.games[state.currentGame] = p.games[state.currentGame].slice(0, rollStart);
     renderEditModal();
   }
 }
@@ -1189,10 +1243,9 @@ function editRecordRoll(pins) {
 function closeEditModal() {
   if (editState) {
     const p = state.players[editState.playerIdx];
-    if (p.games[state.currentGame].length <= editState.rollStart) {
-      p.games[state.currentGame] = editState.originalRolls;
-    }
-    // Restore done state if cancelled
+    // Always restore original rolls on cancel — no partial edits leak through
+    p.games[state.currentGame] = editState.originalRolls;
+    // Restore done state
     if (editState.wasGameDone) {
       state.done = state.players.every(pp => isPlayerDone(pp));
     }
