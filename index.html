@@ -14,7 +14,7 @@
 <style>
   :root {
     --red: #B23A2F; --red-dark: #8a2c22;
-    --amber: #C8A44D; --green: #2F4F3E;
+    --amber: #C8A44D;
     --bg: #111111; --surface: #1a1a1a; --surface2: #222222; --surface3: #2c2c2c;
     --border: rgba(255,255,255,0.08);
     --text: #F5F2E9; --text-muted: #8a8479; --text-dim: #4a4741;
@@ -31,7 +31,6 @@
     --text: #1a1714;
     --text-muted: #6b6560;
     --text-dim: #a09890;
-    --red: #B23A2F;
     --amber: #A07A1A;
     --gold: #A07A1A;
   }
@@ -48,7 +47,8 @@
   .theme-toggle:hover { color: var(--text); border-color: rgba(128,128,128,0.3); }
   .theme-toggle svg { flex-shrink: 0; transition: transform 0.3s; }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+  html, body { height: 100%; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; display: flex; flex-direction: column; }
 
   /* HEADER */
   header { display: flex; align-items: center; justify-content: space-between; padding: 6px 16px; border-bottom: 1px solid var(--border); background: var(--surface); }
@@ -83,14 +83,13 @@
   .setup-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
   .setup-label { font-size: 13px; color: var(--text-muted); width: 70px; flex-shrink: 0; }
   .setup-row input, .setup-row select { font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 500; padding: 10px 12px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface2); color: var(--text); outline: none; }
-  .setup-row input { width: 80px; text-align: center; }
   .setup-row input:focus, .setup-row select:focus { border-color: var(--red); }
   .setup-row select { flex: 1; }
   #add-player-btn { width: 100%; margin-bottom: 20px; font-size: 15px; padding: 11px; border-style: dashed; }
   #start-btn { width: 100%; font-size: 16px; padding: 14px; border-radius: var(--radius); font-weight: 600; letter-spacing: 0.5px; }
 
   /* GAME SCREEN */
-  #game-screen { display: none; flex-direction: column; padding: 0 0 160px; }
+  #game-screen { display: none; flex-direction: column; flex: 1; min-height: 0; }
   #game-screen.active { display: flex; }
 
   /* Game tabs (Game 1 / 2 / 3) */
@@ -110,13 +109,14 @@
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
   /* Scorecard */
-  .scorecard-wrap { padding: 12px 12px 0; overflow-x: auto; flex: 1; }
-  .scorecard { width: 100%; min-width: 480px; border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; background: var(--surface); }
-  .sc-header { display: grid; grid-template-columns: 90px repeat(9, 1fr) 1.4fr; background: var(--surface2); border-bottom: 1px solid var(--border); }
+  .scorecard-wrap { padding: 12px 12px 0; overflow-x: auto; overflow-y: hidden; flex: 1; min-height: 0; display: flex; flex-direction: column; padding-bottom: 160px; }
+  .scorecard { width: 100%; min-width: 480px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface); flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .sc-header { display: grid; grid-template-columns: 90px repeat(9, 1fr) 1.4fr; background: var(--surface2); border-bottom: 1px solid var(--border); flex-shrink: 0; }
   .sc-cell { padding: 6px 4px; text-align: center; font-size: 11px; font-weight: 500; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; border-right: 1px solid var(--border); }
   .sc-cell:last-child { border-right: none; }
-  .sc-player-row { display: grid; grid-template-columns: 90px repeat(9, 1fr) 1.4fr; border-bottom: 1px solid var(--border); transition: background 0.15s; }
-  .sc-player-row:last-child { border-bottom: none; }
+  .sc-rows { display: flex; flex-direction: column; flex: 1; }
+  .sc-player-row { display: grid; grid-template-columns: 90px repeat(9, 1fr) 1.4fr; border-bottom: 1px solid var(--border); transition: background 0.15s; flex: 1; min-height: 54px; }
+  .sc-rows .sc-player-row:last-child { border-bottom: none; }
   .sc-player-row.active-player { background: rgba(245,242,233,0.15); }
   .sc-player-row.active-player .sc-name { color: var(--text); }
   .sc-player-row.active-player .sc-ball { color: var(--text-muted); }
@@ -131,7 +131,7 @@
   body.light .sc-player-row.active-player .sc-name { border-right-color: rgba(0,0,0,0.08); }
   .sc-name { display: flex; align-items: center; gap: 8px; padding: 10px 12px; font-size: 13px; font-weight: 500; border-right: 1px solid var(--border); }
   .sc-name-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .sc-frame { display: flex; flex-direction: column; align-items: center; border-right: 1px solid var(--border); min-height: 48px; position: relative; flex: 1; }
+  .sc-frame { display: flex; flex-direction: column; align-items: center; justify-content: space-between; border-right: 1px solid var(--border); position: relative; flex: 1; padding: 6px 2px; }
   .sc-frame:last-child { border-right: none; }
   .sc-balls { display: flex; gap: 2px; padding: 5px 4px 2px; justify-content: center; min-height: 24px; width: 100%; }
   .sc-ball { font-family: 'Oswald', sans-serif; font-size: 13px; color: var(--text-muted); width: 18px; text-align: center; line-height: 1; }
@@ -229,6 +229,8 @@
   /* Export */
   .export-btn { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; padding: 5px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.15s; white-space: nowrap; }
   .export-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+  #setup-social { display: flex; }
+  #game-screen.active ~ #setup-social, body.game-active #setup-social { display: none; }
   #game-tabs-row { display: flex; align-items: flex-end; justify-content: space-between; padding: 10px 16px 0; background: var(--surface); border-bottom: 1px solid var(--border); }
 
   .add-player-tab { font-size: 20px; padding: 8px 14px; color: var(--text-muted); border-style: dashed; flex-shrink: 0; }
@@ -299,12 +301,7 @@
       </div>
     </a>
   </div>
-  <div class="header-actions" id="header-actions">
-    <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="Toggle light/dark mode">
-      <svg id="theme-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/></svg>
-      <span id="theme-label">Light</span>
-    </button>
-  </div>
+  <div class="header-actions" id="header-actions"></div>
 </header>
 
 <!-- SETUP SCREEN -->
@@ -502,7 +499,7 @@ let state = {
 
 // Promo media — tries .mp4 first, then .jpg/.jpeg/.png for each slot
 const PROMO_BASES = ['promos/promo-1', 'promos/promo-2'];
-const MIDGAME_BASES = ['promos/midgame-1', null, null];
+const MIDGAME_BASES = ['promos/midgame-1', null, null]; // Frame 6 of Game 1 only; Games 2 & 3 disabled
 const SLIDE_EXTS = ['.jpg', '.jpeg', '.png'];
 
 async function resolveImageUrl(base) {
@@ -584,7 +581,7 @@ function addPlayerRow(name='') {
   const defaultName = name || `Player ${idx + 1}`;
   row.innerHTML = `
     <div class="color-dot" style="background:${color}"></div>
-    <input type="text" placeholder="${defaultName}" maxlength="16" value="" autocomplete="off" spellcheck="false">
+    <input type="text" placeholder="${defaultName}" maxlength="16" autocomplete="off" spellcheck="false">
     ${idx >= 1 ? `<button class="btn btn-ghost btn-sm" onclick="removePlayerRow(this)">✕</button>` : ''}
   `;
   list.appendChild(row);
@@ -621,6 +618,7 @@ function startSession() {
   startSessionTimers();
   document.getElementById('setup-screen').style.display = 'none';
   document.getElementById('game-screen').classList.add('active');
+  document.body.classList.add('game-active');
   updateHeaderActions();
   saveState();
   renderAll();
@@ -628,6 +626,7 @@ function startSession() {
 
 function updateHeaderActions() {
   const isLight = document.body.classList.contains('light');
+  const canAdd = state.players.length < 8;
   document.getElementById('header-actions').innerHTML = `
     <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="Toggle light/dark mode">
       <svg id="theme-icon" width="14" height="14" viewBox="0 0 24 24" ${isLight ? 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"' : 'fill="currentColor"'}>
@@ -637,6 +636,7 @@ function updateHeaderActions() {
     </button>
     <span class="lane-badge"><span class="lane-badge-dot"></span>${state.lane ? 'Lane '+state.lane : 'Open Lane'}</span>
     <span class="lane-badge" style="font-family:'Inter',sans-serif;font-size:13px;letter-spacing:0;color:var(--text-muted);">⏱ <span id="session-clock">00:00</span></span>
+    ${canAdd ? `<button class="btn btn-sm btn-ghost" onclick="openAddPlayerModal()" title="Add player">+ Player</button>` : ''}
     <button class="btn btn-sm btn-ghost" onclick="confirmResetLane()" title="Reset lane for new group">↺ Reset</button>
     <button class="btn btn-sm" onclick="confirmEndSession()">End Session</button>
   `;
@@ -781,7 +781,6 @@ function renderAll() {
   renderTabs();
   renderScorecard();
   renderCurrentPanel();
-  // Note: checkGameOver is NOT called here to prevent auto-trigger when reviewing past games
 }
 
 function renderGameTabs() {
@@ -797,17 +796,24 @@ function renderGameTabs() {
     });
     const isCurrent = i===state.currentGame;
     const hasData = state.players.some(p => p.games[i].length > 0);
+    const isUnlocked = i <= state.currentGame; // can always go back to prior games
     return `<div class="game-tab ${isCurrent?'active':''} ${isDone&&!isCurrent?'done':''}"
-      onclick="switchGame(${i})" style="${!hasData&&!isCurrent?'opacity:0.35;pointer-events:none':''}">GAME ${i+1}</div>`;
+      onclick="switchGame(${i})" style="${!isUnlocked?'opacity:0.35;pointer-events:none':''}">GAME ${i+1}</div>`;
   }).join('');
 }
 
 function switchGame(idx) {
   state.currentGame = idx;
-  // Allow reviewing any game; if session is over just show scores
-  if (!state.done) {
-    const notDone = state.players.findIndex(p => !isPlayerDoneInGame(p,idx));
-    state.current = notDone >= 0 ? notDone : 0;
+  // Don't force state.current — if the current player hasn't finished this
+  // game, they stay up; otherwise find the first unfinished player.
+  // User can always tap a scorecard row to manually select who is up.
+  if (state.done) {
+    renderAll();
+    return;
+  }
+  if (isPlayerDoneInGame(state.players[state.current], idx)) {
+    const notDone = state.players.findIndex(p => !isPlayerDoneInGame(p, idx));
+    if (notDone >= 0) state.current = notDone;
   }
   renderAll();
 }
@@ -866,7 +872,7 @@ function renderScorecard() {
     </div>`;
   }).join('');
   const hint = `<div class="edit-hint">Tap any frame to correct a score</div>`;
-  el.innerHTML = `<div class="sc-header">${headerCells}</div>${rows}${hint}`;
+  el.innerHTML = `<div class="sc-header">${headerCells}</div><div class="sc-rows">${rows}</div>${hint}`;
 }
 
 function renderCurrentPanel() {
@@ -1081,10 +1087,10 @@ function resetToSetup() {
   stopSessionTimers();
   dismissTimeAlert();
   document.getElementById('game-screen').classList.remove('active');
+  document.body.classList.remove('game-active');
   document.getElementById('promo-screen').classList.remove('show');
   document.getElementById('gameover-panel').classList.remove('show');
   document.getElementById('setup-screen').style.display='block';
-  document.getElementById('header-actions').innerHTML='';
   initSetup();
   startSlideshow();
 }
@@ -1110,7 +1116,6 @@ function getRollCountForFrame(rolls, frameIdx) {
     if (b1 === 10) { ri += 1; }
     else { ri += 2; }
   }
-  const start = ri;
   if (frameIdx === 9) {
     // 10th frame: 2 or 3 balls
     const b10 = rolls.slice(ri);
@@ -1135,8 +1140,7 @@ function openEditModal(playerIdx, frameIdx) {
     playerIdx, frameIdx, rollStart, rollCount,
     originalRolls: [...rolls],
     rollsAfter,     // rolls from frames AFTER this one — kept intact
-    newRolls: [], ball: 0, pinsLeft: 10,
-    wasGameDone: state.done
+    newRolls: [], ball: 0, pinsLeft: 10
   };
 
   // Temporarily set rolls to just the frames BEFORE this one
@@ -1207,25 +1211,20 @@ function editRecordRoll(pins) {
 
   if (done) {
     // Splice the new rolls in, then restore all rolls from future frames
-    p.games[state.currentGame] = [
+    const updatedRolls = [
       ...p.games[state.currentGame].slice(0, rollStart), // before this frame
       ...newRolls,                                        // this frame (edited)
       ...rollsAfter                                       // future frames — unchanged
     ];
+    // Patch originalRolls so closeEditModal doesn't overwrite the new rolls on cancel
+    editState.originalRolls = updatedRolls;
+    p.games[state.currentGame] = updatedRolls;
     saveState();
-    const wasDone = editState.wasGameDone;
-    closeEditModal();
+    closeEditModal(); // safe — originalRolls now matches what we want to keep
+    // Never auto-trigger game over after an edit — let the user navigate via tabs
     const allDone = state.players.every(pp => isPlayerDone(pp));
-    if (allDone) {
-      state.done = true;
-      renderAll();
-      if (wasDone) showGameOver();
-    } else {
-      state.done = false;
-      if (!isPlayerDone(p)) state.current = editState.playerIdx;
-      else state.current = findNextActivePlayer() !== -1 ? findNextActivePlayer() : 0;
-      renderAll();
-    }
+    state.done = allDone;
+    renderAll();
   } else {
     // Mid-frame: update rolls temporarily for live scorecard preview
     p.games[state.currentGame] = [
@@ -1243,12 +1242,9 @@ function editRecordRoll(pins) {
 function closeEditModal() {
   if (editState) {
     const p = state.players[editState.playerIdx];
-    // Always restore original rolls on cancel — no partial edits leak through
+    // Restore to originalRolls — on a completed edit this is already the new rolls;
+    // on a cancel this reverts to what was there before the edit was opened
     p.games[state.currentGame] = editState.originalRolls;
-    // Restore done state
-    if (editState.wasGameDone) {
-      state.done = state.players.every(pp => isPlayerDone(pp));
-    }
   }
   editState = null;
   document.getElementById('edit-modal').classList.remove('show');
@@ -1316,6 +1312,7 @@ function hasFrame6BeenReached() {
 }
 
 function shouldShowMidgamePromo() {
+  if (state.currentGame !== 0) return false; // only Game 1 has a midgame promo
   if (midgamePromoShownForGame.includes(state.currentGame)) return false;
   return hasFrame6BeenReached();
 }
@@ -1785,8 +1782,6 @@ function advanceSlide() {
   showSlide(slideIndex);
 }
 
-function nextSlide() { advanceSlide(); }
-
 async function startSlideshow() {
   if (slideshowActive) return;
   await loadSlideImages();
@@ -1917,6 +1912,7 @@ if (loadSavedState()) {
   // Resume in-progress session
   document.getElementById('setup-screen').style.display = 'none';
   document.getElementById('game-screen').classList.add('active');
+  document.body.classList.add('game-active');
   updateHeaderActions();
   if (sessionStartTime) {
     // Recalculate remaining time and restart timers
