@@ -7,45 +7,58 @@
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Inter', sans-serif; background: #111111; color: #F5F2E9; min-height: 100vh; padding: 0 0 40px; }
+  body { font-family: 'Inter', sans-serif; background: #111111; color: #F5F2E9; min-height: 100vh; padding: 0 0 48px; }
 
-  header { background: #1a1a1a; border-bottom: 1px solid rgba(255,255,255,0.08); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; }
+  header { background: #1a1a1a; border-bottom: 1px solid rgba(255,255,255,0.08); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; }
   .header-logo { font-family: 'Oswald', sans-serif; font-size: 20px; letter-spacing: 2px; color: #C8A44D; text-transform: uppercase; text-decoration: none; }
   .header-sub { font-size: 11px; color: #4a4741; letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
 
-  .container { max-width: 480px; margin: 0 auto; padding: 24px 20px; }
+  .container { max-width: 100%; margin: 0 auto; padding: 20px 16px; }
 
-  .session-info { margin-bottom: 24px; }
-  .session-title { font-family: 'Oswald', sans-serif; font-size: 26px; letter-spacing: 2px; color: #F5F2E9; text-transform: uppercase; }
-  .session-meta { font-size: 13px; color: #4a4741; margin-top: 4px; letter-spacing: 0.5px; }
+  .session-title { font-family: 'Oswald', sans-serif; font-size: 24px; letter-spacing: 2px; color: #F5F2E9; text-transform: uppercase; }
+  .session-meta { font-size: 12px; color: #4a4741; margin-top: 4px; letter-spacing: 0.5px; margin-bottom: 24px; }
 
+  /* Standings */
+  .standings { background: #1a1a1a; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); overflow: hidden; margin-bottom: 28px; }
+  .standings-header { background: #222; padding: 9px 14px; font-family: 'Oswald', sans-serif; font-size: 12px; letter-spacing: 2px; color: #8a8479; text-transform: uppercase; }
+  .standing-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .standing-row:last-child { border-bottom: none; }
+  .standing-row.first { background: rgba(200,164,77,0.06); }
+  .standing-left { display: flex; align-items: center; gap: 10px; }
+  .player-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .standing-name { font-size: 14px; font-weight: 500; }
+  .standing-games { font-size: 11px; color: #4a4741; margin-top: 2px; }
+  .standing-total { font-family: 'Oswald', sans-serif; font-size: 24px; }
+  .standing-total.gold { color: #C8A44D; }
+
+  /* Per-game scorecard */
   .game-section { margin-bottom: 24px; }
-  .game-label { font-family: 'Oswald', sans-serif; font-size: 13px; letter-spacing: 2px; color: #B23A2F; text-transform: uppercase; margin-bottom: 8px; }
+  .game-label { font-family: 'Oswald', sans-serif; font-size: 12px; letter-spacing: 2px; color: #B23A2F; text-transform: uppercase; margin-bottom: 8px; }
 
-  .player-card { background: #1a1a1a; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
-  .player-card.top { border-color: rgba(200,164,77,0.4); background: #1f1d17; }
-  .player-info { display: flex; align-items: center; gap: 10px; }
-  .player-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  .player-name { font-size: 15px; font-weight: 500; }
-  .player-rank { font-size: 11px; color: #C8A44D; letter-spacing: 0.5px; margin-top: 2px; }
-  .player-score { font-family: 'Oswald', sans-serif; font-size: 28px; letter-spacing: 1px; color: #F5F2E9; }
-  .player-score.top { color: #C8A44D; }
+  .scorecard { width: 100%; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); overflow: hidden; background: #1a1a1a; display: table; border-collapse: collapse; }
+  .sc-header-row { display: grid; grid-template-columns: 70px repeat(9, 1fr) 1.3fr; background: #222; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .sc-player-row { display: grid; grid-template-columns: 70px repeat(9, 1fr) 1.3fr; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .sc-player-row:last-child { border-bottom: none; }
 
-  .total-section { background: #1a1a1a; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); overflow: hidden; margin-bottom: 28px; }
-  .total-header { background: #222; padding: 10px 16px; font-family: 'Oswald', sans-serif; font-size: 13px; letter-spacing: 2px; color: #8a8479; text-transform: uppercase; }
-  .total-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-  .total-row:last-child { border-bottom: none; }
-  .total-row.first { background: rgba(200,164,77,0.05); }
-  .total-name { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 500; }
-  .total-games { font-size: 11px; color: #4a4741; margin-top: 2px; }
-  .total-score { font-family: 'Oswald', sans-serif; font-size: 26px; }
-  .total-score.gold { color: #C8A44D; }
+  .sc-cell { padding: 5px 3px; text-align: center; font-size: 10px; font-weight: 500; color: #8a8479; letter-spacing: 0.5px; text-transform: uppercase; border-right: 1px solid rgba(255,255,255,0.06); }
+  .sc-cell:last-child { border-right: none; }
 
-  .trophy { font-size: 16px; margin-right: 2px; }
+  .sc-name-cell { display: flex; align-items: center; gap: 6px; padding: 0 8px; border-right: 1px solid rgba(255,255,255,0.06); }
+  .sc-name-text { font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-  .footer-links { display: flex; gap: 10px; flex-wrap: wrap; }
-  .footer-link { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: #8a8479; text-decoration: none; padding: 8px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); transition: color 0.15s; }
-  .footer-link:hover { color: #F5F2E9; }
+  .sc-frame { display: flex; flex-direction: column; align-items: center; justify-content: space-between; border-right: 1px solid rgba(255,255,255,0.06); padding: 4px 2px; min-height: 48px; }
+  .sc-frame:last-child { border-right: none; }
+  .sc-balls { display: flex; gap: 2px; padding: 2px 2px 0; justify-content: center; min-height: 16px; }
+  .sc-ball { font-size: 11px; font-weight: 600; min-width: 12px; text-align: center; }
+  .sc-ball.strike { color: #B23A2F; }
+  .sc-ball.spare { color: #C8A44D; }
+  .sc-ball.gutter { color: #4a4741; }
+  .sc-cumulative { font-family: 'Oswald', sans-serif; font-size: 16px; letter-spacing: 0.5px; color: #F5F2E9; padding-bottom: 2px; }
+  .sc-cumulative.pending { color: #4a4741; font-size: 10px; }
+
+  /* Footer */
+  .footer-links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+  .footer-link { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: #8a8479; text-decoration: none; padding: 8px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); }
   .footer-link.gold { color: #C8A44D; border-color: rgba(200,164,77,0.3); }
 
   .error { text-align: center; padding: 60px 20px; color: #4a4741; }
@@ -66,28 +79,97 @@
 </div>
 
 <script>
+function getFrameData(rolls) {
+  const frames = []; let ri = 0;
+  for (let f = 0; f < 10; f++) {
+    if (ri >= rolls.length) { frames.push({balls:[], cumScore:null}); continue; }
+    const isLast = f === 9; let balls = [], score = null;
+    if (!isLast) {
+      const b1 = rolls[ri];
+      if (b1 === undefined) { frames.push({balls:[], cumScore:null}); continue; }
+      if (b1 === 10) {
+        balls = [10];
+        const b2 = rolls[ri+1], b3 = rolls[ri+2];
+        if (b2 !== undefined && b3 !== undefined) score = 10 + b2 + b3;
+        ri += 1;
+      } else {
+        const b2 = rolls[ri+1];
+        if (b2 === undefined) { frames.push({balls:[b1], cumScore:null}); ri += 1; continue; }
+        balls = [b1, b2];
+        if (b1 + b2 === 10) { const b3 = rolls[ri+2]; if (b3 !== undefined) score = 10 + b3; }
+        else score = b1 + b2;
+        ri += 2;
+      }
+    } else {
+      balls = rolls.slice(ri, ri+3);
+      if (balls.length >= 2) {
+        const [a, b, c] = balls;
+        if (a === 10 || a + b === 10) { if (c !== undefined) score = a + b + c; }
+        else score = a + b;
+      }
+    }
+    frames.push({balls, cumScore: score});
+  }
+  let running = 0;
+  frames.forEach(fr => { if (fr.cumScore !== null) { running += fr.cumScore; fr.cumScore = running; } });
+  return frames;
+}
+
 function displayBall(val, fi, bi, allBalls) {
   const isLast = fi === 9;
   if (!isLast) {
-    if (bi === 0 && val === 10) return { text: 'X', color: '#B23A2F' };
-    if (bi === 1 && allBalls[0] + val === 10) return { text: '/', color: '#C8A44D' };
-    if (val === 0) return { text: '–', color: '#4a4741' };
-    return { text: String(val), color: '#8a8479' };
+    if (bi === 0 && val === 10) return { text: 'X', cls: 'strike' };
+    if (bi === 1 && allBalls[0] !== 10 && allBalls[0] + val === 10) return { text: '/', cls: 'spare' };
+    if (val === 0) return { text: '–', cls: 'gutter' };
+    return { text: String(val), cls: '' };
   } else {
     const [a, b] = allBalls;
-    if (bi === 0) return val === 10 ? { text: 'X', color: '#B23A2F' } : { text: String(val), color: '#8a8479' };
+    if (bi === 0) return val === 10 ? { text: 'X', cls: 'strike' } : val === 0 ? { text: '–', cls: 'gutter' } : { text: String(val), cls: '' };
     if (bi === 1) {
-      if (val === 10) return { text: 'X', color: '#B23A2F' };
-      if (a !== 10 && a + val === 10) return { text: '/', color: '#C8A44D' };
-      return val === 0 ? { text: '–', color: '#4a4741' } : { text: String(val), color: '#8a8479' };
+      if (val === 10) return { text: 'X', cls: 'strike' };
+      if (a !== 10 && a + val === 10) return { text: '/', cls: 'spare' };
+      return val === 0 ? { text: '–', cls: 'gutter' } : { text: String(val), cls: '' };
     }
     if (bi === 2) {
-      if (val === 10) return { text: 'X', color: '#B23A2F' };
-      if (a === 10 && b !== 10 && b + val === 10) return { text: '/', color: '#C8A44D' };
-      return val === 0 ? { text: '–', color: '#4a4741' } : { text: String(val), color: '#8a8479' };
+      if (val === 10) return { text: 'X', cls: 'strike' };
+      if (a === 10 && b !== 10 && b + val === 10) return { text: '/', cls: 'spare' };
+      return val === 0 ? { text: '–', cls: 'gutter' } : { text: String(val), cls: '' };
     }
   }
-  return { text: String(val), color: '#8a8479' };
+  return { text: String(val), cls: '' };
+}
+
+function renderScorecard(players, gameIdx) {
+  const headerCells = '<div class="sc-cell" style="text-align:left;padding-left:8px;">Player</div>'
+    + [1,2,3,4,5,6,7,8,9,10].map(n => `<div class="sc-cell">${n}</div>`).join('');
+
+  const rows = players.map(p => {
+    const rolls = (p.rolls && p.rolls[gameIdx]) ? p.rolls[gameIdx] : [];
+    const frames = getFrameData(rolls);
+    const frameCells = frames.map((fr, fi) => {
+      const ballsHtml = fr.balls.map((v, bi) => {
+        const {text, cls} = displayBall(v, fi, bi, fr.balls);
+        return `<span class="sc-ball ${cls}">${text}</span>`;
+      }).join('');
+      const scoreHtml = fr.cumScore !== null
+        ? `<span class="sc-cumulative">${fr.cumScore}</span>`
+        : `<span class="sc-cumulative pending">·</span>`;
+      return `<div class="sc-frame"><div class="sc-balls">${ballsHtml}</div>${scoreHtml}</div>`;
+    }).join('');
+
+    return `<div class="sc-player-row">
+      <div class="sc-name-cell">
+        <div class="player-dot" style="background:${p.color}"></div>
+        <div class="sc-name-text">${p.name}</div>
+      </div>
+      ${frameCells}
+    </div>`;
+  }).join('');
+
+  return `<div class="scorecard">
+    <div class="sc-header-row">${headerCells}</div>
+    ${rows}
+  </div>`;
 }
 
 try {
@@ -96,54 +178,43 @@ try {
   const data = JSON.parse(decodeURIComponent(atob(hash)));
 
   const sorted = [...data.players].sort((a, b) => b.total - a.total);
-  const maxTotal = sorted[0]?.total || 0;
 
-  let html = `
-    <div class="session-info">
-      <div class="session-title">Your Score Card</div>
-      <div class="session-meta">${data.date}${data.lane ? '  ·  Lane ' + data.lane : ''}  ·  Gale's Lanes Bowl &amp; Bar</div>
-    </div>
-
-    <div class="total-section">
-      <div class="total-header">Final Standings — 3 Game Total</div>
-      ${sorted.map((p, i) => `
-        <div class="total-row ${i === 0 ? 'first' : ''}">
-          <div class="total-name">
-            <div class="player-dot" style="background:${p.color}"></div>
-            <div>
-              <div>${i === 0 ? '<span class="trophy">🏆</span>' : (i + 1) + '. '}${p.name}</div>
-              <div class="total-games">${p.games.join(' · ')}</div>
-            </div>
-          </div>
-          <div class="total-score ${i === 0 ? 'gold' : ''}">${p.total}</div>
+  // Build standings
+  const standingsRows = sorted.map((p, i) => `
+    <div class="standing-row ${i === 0 ? 'first' : ''}">
+      <div class="standing-left">
+        <div class="player-dot" style="background:${p.color}"></div>
+        <div>
+          <div class="standing-name">${i === 0 ? '🏆 ' : (i+1) + '. '}${p.name}</div>
+          <div class="standing-games">${p.games.map((g,gi) => 'G'+(gi+1)+': '+g).join('  ·  ')}</div>
         </div>
-      `).join('')}
+      </div>
+      <div class="standing-total ${i === 0 ? 'gold' : ''}">${p.total}</div>
+    </div>
+  `).join('');
+
+  // Build per-game scorecards — only show games that have any scores
+  const gameSections = [0,1,2].map(gi => {
+    const hasScores = data.players.some(p => p.games[gi] > 0 || (p.rolls && p.rolls[gi] && p.rolls[gi].length > 0));
+    if (!hasScores) return '';
+    return `
+      <div class="game-section">
+        <div class="game-label">Game ${gi + 1}</div>
+        ${renderScorecard(data.players, gi)}
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('content').innerHTML = `
+    <div class="session-title">Score Card</div>
+    <div class="session-meta">${data.date}${data.lane ? '  ·  Lane ' + data.lane : ''}  ·  Gale's Lanes Bowl &amp; Bar</div>
+
+    <div class="standings">
+      <div class="standings-header">Final Standings — 3 Game Total</div>
+      ${standingsRows}
     </div>
 
-    <div style="margin-bottom:28px;">
-      ${[0,1,2].map(gi => {
-        const gamePlayers = data.players.filter(p => p.games[gi] > 0);
-        if (gamePlayers.length === 0) return '';
-        const sorted = [...data.players].sort((a,b) => b.games[gi]-a.games[gi]);
-        return `
-          <div class="game-section">
-            <div class="game-label">Game ${gi + 1}</div>
-            ${sorted.map((p, i) => `
-              <div class="player-card ${i === 0 ? 'top' : ''}">
-                <div class="player-info">
-                  <div class="player-dot" style="background:${p.color}"></div>
-                  <div>
-                    <div class="player-name">${p.name}</div>
-                    ${i === 0 ? '<div class="player-rank">⭐ Game Winner</div>' : ''}
-                  </div>
-                </div>
-                <div class="player-score ${i === 0 ? 'top' : ''}">${p.games[gi]}</div>
-              </div>
-            `).join('')}
-          </div>
-        `;
-      }).join('')}
-    </div>
+    ${gameSections}
 
     <div class="footer-links">
       <a class="footer-link gold" href="https://g.page/r/CWXtuifBv6fBEBM/review" target="_blank" rel="noopener">
@@ -159,8 +230,6 @@ try {
       </a>
     </div>
   `;
-
-  document.getElementById('content').innerHTML = html;
 } catch(e) {
   document.getElementById('content').innerHTML = `
     <div class="error">
