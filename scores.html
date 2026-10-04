@@ -160,7 +160,7 @@ function renderScorecard(players, gameIdx) {
     return `<div class="sc-player-row">
       <div class="sc-name-cell">
         <div class="player-dot" style="background:${p.color}"></div>
-        <div class="sc-name-text">${p.name}</div>
+        <div class="sc-name-text">${p.name}${(data.leagueMode && p.handicap) ? '<span style="font-size:9px;color:#C8A44D;margin-left:2px;">+'+p.handicap+'</span>' : ''}</div>
       </div>
       ${frameCells}
     </div>`;
@@ -175,23 +175,33 @@ function renderScorecard(players, gameIdx) {
 try {
   const hash = window.location.hash.slice(1);
   if (!hash) throw new Error('No data');
-  const data = JSON.parse(decodeURIComponent(atob(hash)));
+  const data = JSON.parse(decodeURIComponent(escape(atob(hash))));
 
   const sorted = [...data.players].sort((a, b) => b.total - a.total);
 
   // Build standings
-  const standingsRows = sorted.map((p, i) => `
+  const standingsRows = sorted.map((p, i) => {
+    const hcp = data.leagueMode && p.handicap ? p.handicap : 0;
+    // p.games[] and p.total already include handicap (adjusted in encoder)
+    const gameStrs = p.games.map((g, gi) => {
+      if (!data.leagueMode || !hcp) return 'G'+(gi+1)+': '+g;
+      const raw = g - hcp;
+      return 'G'+(gi+1)+': '+g+'<span style="font-size:10px;color:#8a8479;"> ('+raw+'+'+hcp+')</span>';
+    }).join('  ·  ');
+    const nameNote = data.leagueMode && hcp
+      ? `${p.name} <span style="font-size:11px;color:#C8A44D;">+${hcp}/game</span>` : p.name;
+    return `
     <div class="standing-row ${i === 0 ? 'first' : ''}">
       <div class="standing-left">
         <div class="player-dot" style="background:${p.color}"></div>
         <div>
-          <div class="standing-name">${i === 0 ? '🏆 ' : (i+1) + '. '}${p.name}</div>
-          <div class="standing-games">${p.games.map((g,gi) => 'G'+(gi+1)+': '+g).join('  ·  ')}</div>
+          <div class="standing-name">${i === 0 ? '🏆 ' : (i+1) + '. '}${nameNote}</div>
+          <div class="standing-games">${gameStrs}</div>
         </div>
       </div>
       <div class="standing-total ${i === 0 ? 'gold' : ''}">${p.total}</div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 
   // Build per-game scorecards — only show games that have any scores
   const gameSections = [0,1,2].map(gi => {
@@ -205,12 +215,15 @@ try {
     `;
   }).join('');
 
+  const leagueBadge = data.leagueMode
+    ? '<span style="display:inline-block;font-size:11px;background:#C8A44D;color:#111;padding:2px 8px;border-radius:4px;letter-spacing:1px;margin-left:8px;font-family:Inter,sans-serif;font-weight:600;vertical-align:middle;">LEAGUE</span>'
+    : '';
   document.getElementById('content').innerHTML = `
-    <div class="session-title">Score Card</div>
+    <div class="session-title">Score Card${leagueBadge}</div>
     <div class="session-meta">${data.date}${data.lane ? '  ·  Lane ' + data.lane : ''}  ·  Gale's Lanes Bowl &amp; Bar</div>
 
     <div class="standings">
-      <div class="standings-header">Final Standings — 3 Game Total</div>
+      <div class="standings-header">${data.leagueMode ? "League Standings — Adjusted 3 Game Total" : "Final Standings — 3 Game Total"}</div>
       ${standingsRows}
     </div>
 
@@ -220,13 +233,6 @@ try {
       <a class="footer-link gold" href="https://g.page/r/CWXtuifBv6fBEBM/review" target="_blank" rel="noopener">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
         Leave a Review
-      </a>
-      <a class="footer-link" href="https://www.galeslanes.com/eat-drink" target="_blank" rel="noopener">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>
-        View Menu
-      </a>
-      <a class="footer-link" href="https://www.galeslanes.com" target="_blank" rel="noopener">
-        galeslanes.com
       </a>
     </div>
   `;
