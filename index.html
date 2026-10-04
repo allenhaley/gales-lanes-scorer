@@ -321,7 +321,7 @@
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
       <div class="setup-title">NEW SESSION</div>
       <label class="league-toggle" title="Enable League Mode with handicaps">
-        <input type="checkbox" id="league-mode-check" onchange="toggleLeagueMode(this.checked)">
+        <input type="checkbox" id="league-mode-check">
         <span class="league-toggle-label">League Mode</span>
       </label>
     </div>
@@ -619,6 +619,8 @@ document.getElementById('add-player-btn').addEventListener('click', () => {
   if (count < 8) addPlayerRow(''); else toast('Maximum 8 players');
 });
 document.getElementById('start-btn').addEventListener('click', startSession);
+  const leagueCb = document.getElementById('league-mode-check');
+  if (leagueCb) leagueCb.addEventListener('change', function() { toggleLeagueMode(this.checked); });
 
 function toggleLeagueMode(on) {
   state.leagueMode = on;
@@ -914,7 +916,7 @@ function renderScorecard() {
       return `<div class="sc-frame ${hasData?'has-data':''} ${isCursorFrame?'cursor-frame':''}" ${ch}><div class="sc-balls">${ballsHtml}</div>${scoreHtml}</div>`;
     }).join('');
     return `<div class="sc-player-row ${isActive?'active-player':''}">
-      <div class="sc-name"><span class="sc-name-dot" style="background:${p.color}"></span>${p.name}</div>
+      <div class="sc-name"><span class="sc-name-dot" style="background:${p.color}"></span>${p.name}${hcpTag}</div>
       ${frameCells}
     </div>`;
   }).join('');
@@ -956,7 +958,7 @@ function renderCurrentPanel() {
     <div class="current-info">
       <span class="current-dot" style="background:${p.color}"></span>
       <span class="current-name">${p.name}</span>
-      <span class="current-frame-info">GAME ${state.currentGame+1} · FRAME ${currentFrame+1} · BALL ${ball+1} · ${pinsLeft} PINS</span>
+      <span class="current-frame-info">GAME ${state.currentGame+1} · FRAME ${currentFrame+1} · BALL ${ball+1} · ${pinsLeft} PINS${state.leagueMode ? " · LEAGUE" : ""}</span>
     </div>
     <div class="frame-nav">
       <button class="frame-nav-btn" onclick="navFrame(-1)" ${canBack ? '' : 'disabled'}>&#8592; Back</button>
@@ -1170,8 +1172,12 @@ async function showPromoBetweenGames() {
   document.getElementById('promo-next-num').textContent = gIdx+2;
 
   document.getElementById('promo-scores').innerHTML = state.players.map(p => {
+    const raw = getPlayerGameScore(p, state.currentGame);
     const adj = getAdjustedScore(p, state.currentGame);
-    const hcpTag = state.leagueMode && p.handicap ? `<span style="font-size:11px;color:var(--gold);margin-left:3px;">+${p.handicap}</span>` : '';
+    const hcpTag = state.leagueMode && p.handicap
+      ? `<span style="font-size:11px;color:var(--gold);margin-left:3px;">+${p.handicap} = ${adj}</span>`
+      : '';
+    const displayScore = state.leagueMode ? adj : raw;
     return `<div class="promo-score-item">
       <div class="promo-score-dot" style="background:${p.color}"></div>
       <span class="promo-score-name">${p.name}</span>
@@ -1208,8 +1214,8 @@ function showFinalResults() {
     const rankCls=i===0?'first':'';
     const scoreCls=i===0?'top':'';
     const hcpNote = state.leagueMode && r.handicap ? `<span style="color:var(--gold);font-size:11px;margin-left:4px;">+${r.handicap}/game</span>` : '';
-    const gameScores = state.leagueMode
-      ? r.adjScores.map((s,gi) => s + (r.handicap ? `<span style="font-size:9px;color:var(--text-dim);">(+${r.handicap})</span>` : '')).join(' · ')
+    const gameScores = state.leagueMode && r.handicap
+      ? r.rawScores.map((s,gi) => `${s}<span style="font-size:9px;color:var(--gold);"> +${r.handicap}</span>`).join(' · ')
       : r.rawScores.join(' · ');
     return `<div class="gameover-row">
       <div class="gameover-rank ${rankCls}">${i===0?'🏆':i+1}</div>
@@ -1549,6 +1555,7 @@ function playTimeAlert() {
 function buildScoreUrl() {
   const data = {
     lane: state.lane,
+    leagueMode: state.leagueMode || false,
     date: new Date().toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'}),
     players: state.players.map(p => ({
       name: p.name,
