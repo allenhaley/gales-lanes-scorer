@@ -10,7 +10,6 @@
 <title>Gale's Lanes — Scorer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Inter:wght@300;400;500;600&family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   :root {
     --red: #B23A2F; --red-dark: #8a2c22;
@@ -133,7 +132,7 @@
   .sc-rows .sc-player-row:last-child { border-bottom: none; }
   .sc-player-row.active-player { background: rgba(245,242,233,0.15); }
   .sc-frame.cursor-frame { outline: 2px solid var(--gold); outline-offset: -2px; border-radius: 3px; }
-  .sc-player-row.active-player .sc-name { color: var(--text); }
+  .sc-player-row.active-player .sc-name { color: var(--text); display: flex; flex-direction: column; justify-content: center; line-height: 1.2; }
   .sc-player-row.active-player .sc-ball { color: var(--text-muted); }
   .sc-player-row.active-player .sc-ball.strike { color: var(--red); }
   .sc-player-row.active-player .sc-ball.spare { color: var(--amber); }
@@ -225,21 +224,7 @@
   .gameover-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
   .gameover-actions .btn { flex: 1; font-size: 15px; padding: 13px; min-width: 100px; }
 
-  /* QR Score modal */
-  #qr-modal { display: none; position: fixed; inset: 0; background: var(--overlay); z-index: 60; align-items: center; justify-content: center; padding: 24px; }
-  #qr-modal.show { display: flex; }
-  .qr-card { background: var(--surface); border-radius: 16px; border: 1px solid var(--border); padding: 28px 24px; width: 100%; max-width: 400px; text-align: center; }
-  .qr-title { font-family: 'Oswald', sans-serif; font-size: 20px; letter-spacing: 2px; color: var(--gold); margin-bottom: 4px; text-transform: uppercase; }
-  .qr-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
-  #qr-code-container { display: flex; justify-content: center; margin-bottom: 16px; }
-  #qr-code-container canvas, #qr-code-container img { border-radius: 8px; border: 6px solid #fff; }
-  .qr-player-list { text-align: left; margin-bottom: 20px; border-top: 1px solid var(--border); padding-top: 14px; }
-  .qr-player-item { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; }
-  .qr-player-name { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; }
-  .qr-player-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .qr-player-score { font-family: 'Oswald', sans-serif; font-size: 18px; color: var(--text); }
-  .qr-actions { display: flex; gap: 10px; margin-top: 4px; }
-  .qr-actions .btn { flex: 1; padding: 12px; font-size: 14px; }
+
 
   /* Footer bar */
   .social-bar { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 16px; padding-bottom: max(12px, env(safe-area-inset-bottom)); border-top: 1px solid var(--border); background: var(--surface); flex-wrap: wrap; }
@@ -371,10 +356,7 @@
 <div id="game-screen">
   <div id="game-tabs-row">
     <div id="game-tabs"></div>
-    <button class="export-btn" onclick="showQrModal()" style="background:var(--surface2);border-color:rgba(200,164,77,0.3);color:var(--gold);">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/></svg>
-      Scores QR
-    </button>
+
     <button class="export-btn" onclick="exportScores()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Export PNG
@@ -406,20 +388,6 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
       Leave a Review
     </a>
-  </div>
-</div>
-
-<!-- QR SCORE MODAL -->
-<div id="qr-modal">
-  <div class="qr-card">
-    <div class="qr-title">Scan for Your Scores</div>
-    <div class="qr-subtitle">Point your phone camera at this QR code to save your score card.</div>
-    <div id="qr-code-container"></div>
-    <div class="qr-player-list" id="qr-player-list"></div>
-    <div class="qr-actions">
-      <button class="btn btn-ghost" onclick="closeQrModal()">Close</button>
-      <button class="btn btn-primary" onclick="closeQrModal()">Done</button>
-    </div>
   </div>
 </div>
 
@@ -458,10 +426,6 @@
     <div class="gameover-actions">
       <button class="btn" onclick="newSession()">New Session</button>
       <button class="btn btn-primary" onclick="playAgain()">Same Players</button>
-      <button class="btn btn-gold" onclick="showQrModal()" style="display:flex;align-items:center;gap:6px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><rect x="19" y="14" width="2" height="2"/><rect x="14" y="19" width="2" height="2"/><rect x="19" y="19" width="2" height="2"/></svg>
-        Get Scores
-      </button>
     </div>
     <div class="social-bar" style="background:transparent;border:none;padding:12px 0 0;gap:12px;">
       <a class="social-link" href="https://www.galeslanes.com/eat-drink" target="_blank" rel="noopener">
@@ -917,7 +881,7 @@ function renderScorecard() {
       frames.forEach(fr => { if (fr.cumScore !== null) fr.cumScore += p.handicap; });
     }
     const isActive = pi===state.current&&!state.done;
-    const hcpTag = state.leagueMode && p.handicap ? ` <span style="font-size:10px;color:var(--gold);">+${p.handicap}</span>` : '';
+    const hcpTag = state.leagueMode && p.handicap ? `<br><span style="font-size:9px;color:var(--gold);font-family:'Inter',sans-serif;font-weight:600;letter-spacing:0.3px;">+${p.handicap} HCP</span>` : '';
     const frameCells = frames.map((fr,fi) => {
       const hasData = fr.balls.length>0;
       const ballsHtml = fr.balls.map((v,bi) => {
@@ -1625,226 +1589,215 @@ function playTimeAlert() {
   } catch(e) {}
 }
 
-// ─── QR SCORE MODAL ──────────────────────────────────────────────────
-function buildScoreUrl() {
-  const data = {
-    lane: state.lane,
-    leagueMode: state.leagueMode || false,
-    date: new Date().toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'}),
-    players: state.players.map(p => ({
-      name: p.name,
-      color: p.color,
-      rolls: p.games,  // full frame-by-frame rolls for all 3 games
-      handicap: p.handicap || 0,
-      games: p.games.map((rolls, gi) => {
-        const frames = getFrameData(rolls);
-        let total = 0;
-        for (let i=9;i>=0;i--) { if (typeof frames[i]?.cumScore==='number') { total=frames[i].cumScore; break; } }
-        return total;
-      }),
-      total: [0,1,2].reduce((sum,gi) => {
-        const frames = getFrameData(p.games[gi]);
-        for (let i=9;i>=0;i--) { if (typeof frames[i]?.cumScore==='number') return sum+frames[i].cumScore; }
-        return sum;
-      }, 0)
-    }))
-  };
-  // Adjust per-game and total scores for league handicap before encoding
-  if (data.leagueMode) {
-    data.players = data.players.map(p => ({
-      ...p,
-      games: p.games.map(g => g + (p.handicap || 0)),
-      total: p.total + (p.handicap || 0) * [0,1,2].filter(gi => p.rolls[gi] && p.rolls[gi].length > 0).length
-    }));
-  }
-  // btoa with Unicode-safe encoding
-  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
-  return `https://scorer.galeslanes.com/scores.html#${encoded}`;
-}
-
-function showQrModal() {
-  const url = buildScoreUrl();
-  const container = document.getElementById('qr-code-container');
-  container.innerHTML = '';
-
-  // Generate QR code
-  new QRCode(container, {
-    text: url,
-    width: 220,
-    height: 220,
-    colorDark: '#111111',
-    colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.M
-  });
-
-  // Build player score summary
-  const sorted = [...state.players].map(p => ({
-    name: p.name,
-    color: p.color,
-    scores: p.games.map((rolls, gi) => {
-      const frames = getFrameData(rolls);
-      for (let i=9;i>=0;i--) { if (typeof frames[i]?.cumScore==='number') return frames[i].cumScore; }
-      return 0;
-    }),
-    total: [0,1,2].reduce((sum,gi) => {
-      const frames = getFrameData(p.games[gi]);
-      for (let i=9;i>=0;i--) { if (typeof frames[i]?.cumScore==='number') return sum+frames[i].cumScore; }
-      return sum;
-    }, 0)
-  })).sort((a,b) => b.total - a.total);
-
-  document.getElementById('qr-player-list').innerHTML = sorted.map(p =>
-    `<div class="qr-player-item">
-      <div class="qr-player-name">
-        <div class="qr-player-dot" style="background:${p.color}"></div>
-        ${p.name}
-      </div>
-      <div style="display:flex;gap:10px;align-items:center;">
-        <span style="font-size:11px;color:var(--text-dim);">${p.scores.join(' · ')}</span>
-        <span class="qr-player-score">${p.total}</span>
-      </div>
-    </div>`
-  ).join('');
-
-  document.getElementById('qr-modal').classList.add('show');
-}
-
-function closeQrModal() {
-  document.getElementById('qr-modal').classList.remove('show');
-}
-
-document.getElementById('qr-modal').addEventListener('click', e => {
-  if (e.target === document.getElementById('qr-modal')) closeQrModal();
-});
-
-// ─── EXPORT SCORES ───────────────────────────────────────────────────
+// ─── EXPORT SCORES ────────────────────────────────────────────
 function exportScores() {
-  const canvas = document.createElement('canvas');
-  const dpr = 2; // retina quality
-  const padX = 40, padY = 40;
-  const rowH = 64, headerH = 44, gameGap = 36;
-  const colW = 52, nameW = 140, gameHeaderH = 32;
-  const totalCols = 10; // frames
-  const totalW = nameW + (colW * totalCols);
-  const numGames = 3;
-  const numPlayers = state.players.length;
-  const tableH = headerH + numPlayers * rowH;
-  const totalH = padY * 2 + 60 + 20 + numGames * (gameHeaderH + tableH + gameGap);
+  const dpr    = 2;
+  const padX   = 48, padTop = 52, padBot = 48;
+  const nameW  = 160;
+  const colW   = 56;   // frames 1-9
+  const col10W = 76;   // frame 10 (3 balls)
+  const rowH   = 68;
+  const headerH = 40;
+  const gameGap = 32;
+  const gameHeadH = 28;
+  const totalFrameW = colW * 9 + col10W;
+  const tableW = nameW + totalFrameW;
 
-  canvas.width = (totalW + padX * 2) * dpr;
+  const numGames   = 3;
+  const numPlayers = state.players.length;
+  const tableH     = headerH + numPlayers * rowH;
+
+  // League info adds a subtitle line
+  const leagueLine = state.leagueMode ? 24 : 0;
+
+  const totalH = padTop + 56 + leagueLine + 16 +
+                 numGames * (gameHeadH + tableH + gameGap) + padBot;
+  const totalW = tableW + padX * 2;
+
+  const canvas = document.createElement('canvas');
+  canvas.width  = totalW * dpr;
   canvas.height = totalH * dpr;
-  canvas.style.width = `${totalW + padX * 2}px`;
-  canvas.style.height = `${totalH}px`;
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
 
-  // Background
+  // ── Background ─────────────────────────────────────────────────────
   ctx.fillStyle = '#111111';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, totalW, totalH);
 
-  // Title
+  // ── Header ─────────────────────────────────────────────────────────
+  let y = padTop;
   ctx.fillStyle = '#C8A44D';
-  ctx.font = 'bold 22px Oswald, Arial';
+  ctx.font = 'bold 24px Oswald, Arial';
   ctx.textAlign = 'left';
-  ctx.fillText("GALE'S LANES  —  Score Sheet", padX, padY + 22);
+  ctx.fillText("GALE'S LANES  —  Score Card", padX, y);
+  y += 26;
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric', year:'numeric'});
+  const timeStr = now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
   ctx.fillStyle = '#4a4741';
   ctx.font = '13px Inter, Arial';
-  const now = new Date();
-  ctx.fillText(`Lane ${state.lane || '—'}  ·  ${now.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric', year:'numeric'})}  ·  ${now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'})}`, padX, padY + 44);
+  ctx.fillText(`Lane ${state.lane || '—'}  ·  ${dateStr}  ·  ${timeStr}`, padX, y);
+  y += 20;
 
-  let y = padY + 70;
+  // ── League badge line ───────────────────────────────────────────────
+  if (state.leagueMode) {
+    const hcpParts = state.players
+      .filter(p => p.handicap)
+      .map(p => `${p.name} +${p.handicap}`);
+    const leagueText = 'LEAGUE MODE' + (hcpParts.length ? '  ·  ' + hcpParts.join('  ·  ') : '');
+    // Badge background
+    ctx.fillStyle = '#C8A44D';
+    const badgeW = ctx.measureText(leagueText).width + 20;
+    ctx.beginPath();
+    ctx.roundRect(padX, y + 2, badgeW, 18, 4);
+    ctx.fill();
+    ctx.fillStyle = '#111111';
+    ctx.font = 'bold 11px Inter, Arial';
+    ctx.fillText(leagueText, padX + 10, y + 14);
+    y += leagueLine;
+  }
 
-  for (let g = 0; g < numGames; g++) {
+  y += 16;
+
+  // ── Helper: draw one full scorecard table ───────────────────────────
+  function drawTable(gameIdx, yStart) {
+    let yt = yStart;
+
     // Game label
     ctx.fillStyle = '#B23A2F';
-    ctx.font = 'bold 14px Oswald, Arial';
+    ctx.font = 'bold 13px Oswald, Arial';
     ctx.textAlign = 'left';
-    ctx.fillText(`GAME ${g + 1}`, padX, y + 20);
-    y += gameHeaderH;
+    ctx.fillText(`GAME ${gameIdx + 1}`, padX, yt + 18);
+    yt += gameHeadH;
 
-    // Header row
+    // Header row background
     ctx.fillStyle = '#2c2c2c';
-    ctx.fillRect(padX, y, totalW, headerH);
+    ctx.fillRect(padX, yt, tableW, headerH);
+
+    // Column header: frame numbers
     ctx.fillStyle = '#8a8479';
     ctx.font = '11px Inter, Arial';
     ctx.textAlign = 'left';
-    ctx.fillText('PLAYER', padX + 10, y + headerH/2 + 4);
-    for (let f = 0; f < 10; f++) {
+    ctx.fillText('PLAYER', padX + 10, yt + headerH / 2 + 4);
+    for (let f = 0; f < 9; f++) {
       ctx.textAlign = 'center';
-      ctx.fillText(String(f + 1), padX + nameW + f * colW + colW / 2, y + headerH/2 + 4);
+      ctx.fillText(String(f + 1), padX + nameW + f * colW + colW / 2, yt + headerH / 2 + 4);
     }
-    y += headerH;
+    ctx.fillText('10', padX + nameW + 9 * colW + col10W / 2, yt + headerH / 2 + 4);
+    yt += headerH;
 
     // Player rows
     state.players.forEach((p, pi) => {
-      const frames = getFrameData(p.games[g]);
-      const isEven = pi % 2 === 0;
-      ctx.fillStyle = isEven ? '#1a1a1a' : '#222222';
-      ctx.fillRect(padX, y, totalW, rowH);
+      const rawFrames = getFrameData(p.games[gameIdx]);
+      // Clone frames and add handicap for display
+      const frames = rawFrames.map(fr => ({...fr}));
+      if (state.leagueMode && p.handicap) {
+        frames.forEach(fr => { if (fr.cumScore !== null) fr.cumScore += p.handicap; });
+      }
 
-      // Player color dot + name
+      // Row background
+      ctx.fillStyle = pi % 2 === 0 ? '#1a1a1a' : '#222222';
+      ctx.fillRect(padX, yt, tableW, rowH);
+
+      // Player dot
       ctx.fillStyle = p.color;
       ctx.beginPath();
-      ctx.arc(padX + 16, y + rowH/2, 5, 0, Math.PI * 2);
+      ctx.arc(padX + 16, yt + 22, 5, 0, Math.PI * 2);
       ctx.fill();
+
+      // Player name
       ctx.fillStyle = '#F5F2E9';
       ctx.font = '13px Inter, Arial';
       ctx.textAlign = 'left';
-      ctx.fillText(p.name, padX + 28, y + rowH/2 - 8);
+      ctx.fillText(p.name, padX + 28, yt + 22);
 
-      // Final score
-      let finalScore = '';
-      for (let i=9;i>=0;i--) { if (typeof frames[i]?.cumScore==='number') { finalScore = String(frames[i].cumScore); break; } }
-      ctx.fillStyle = '#C8A44D';
-      ctx.font = 'bold 18px Oswald, Arial';
-      ctx.fillText(finalScore, padX + 28, y + rowH/2 + 12);
+      // Handicap label under name (league mode)
+      if (state.leagueMode && p.handicap) {
+        ctx.fillStyle = '#C8A44D';
+        ctx.font = 'bold 10px Inter, Arial';
+        ctx.fillText(`+${p.handicap} HCP`, padX + 28, yt + 38);
+      }
 
-      // Frames
+      // Final adjusted score under name
+      let finalScore = null;
+      for (let i = 9; i >= 0; i--) {
+        if (typeof frames[i]?.cumScore === 'number') { finalScore = frames[i].cumScore; break; }
+      }
+      if (finalScore !== null) {
+        ctx.fillStyle = '#C8A44D';
+        ctx.font = 'bold 20px Oswald, Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText(String(finalScore), padX + 28, yt + rowH - 10);
+      }
+
+      // Frame cells
       frames.forEach((fr, fi) => {
-        const fx = padX + nameW + fi * colW;
-        // Border
+        const isLast = fi === 9;
+        const fw  = isLast ? col10W : colW;
+        const fx  = padX + nameW + (fi < 9 ? fi * colW : 9 * colW);
+
+        // Cell border
         ctx.strokeStyle = '#333';
         ctx.lineWidth = 0.5;
-        ctx.strokeRect(fx, y, colW, rowH);
+        ctx.strokeRect(fx, yt, fw, rowH);
 
-        // Balls
+        // Dividing line between top balls area and score area
+        ctx.beginPath();
+        ctx.moveTo(fx, yt + rowH * 0.45);
+        ctx.lineTo(fx + fw, yt + rowH * 0.45);
+        ctx.stroke();
+
+        // Ball symbols
         fr.balls.forEach((v, bi) => {
           const { text, cls } = displayBall(v, fi, bi, fr.balls);
-          ctx.font = '12px Oswald, Arial';
+          ctx.font = 'bold 12px Oswald, Arial';
           ctx.textAlign = 'center';
-          if (cls === 'strike') ctx.fillStyle = '#B23A2F';
+          if (cls === 'strike')     ctx.fillStyle = '#B23A2F';
           else if (cls === 'spare') ctx.fillStyle = '#C8A44D';
+          else if (cls === 'gutter') ctx.fillStyle = '#4a4741';
           else ctx.fillStyle = '#8a8479';
-          const ballX = fx + (fi === 9 ? (bi * (colW/3) + colW/6) : (bi === 0 ? colW * 0.35 : colW * 0.65));
-          ctx.fillText(text, ballX, y + 18);
+
+          let ballX;
+          if (!isLast) {
+            ballX = fx + (bi === 0 ? fw * 0.33 : fw * 0.67);
+          } else {
+            ballX = fx + (fw / 3) * bi + fw / 6;
+          }
+          ctx.fillText(text, ballX, yt + rowH * 0.38);
         });
 
         // Cumulative score
         if (fr.cumScore !== null) {
           ctx.fillStyle = '#F5F2E9';
-          ctx.font = 'bold 16px Oswald, Arial';
+          ctx.font = 'bold 15px Oswald, Arial';
           ctx.textAlign = 'center';
-          ctx.fillText(String(fr.cumScore), fx + colW/2, y + rowH - 10);
+          ctx.fillText(String(fr.cumScore), fx + fw / 2, yt + rowH - 10);
         }
       });
 
-      // Grid lines
-      ctx.strokeStyle = '#333';
+      // Full row outer border
+      ctx.strokeStyle = '#444';
       ctx.lineWidth = 0.5;
-      ctx.strokeRect(padX, y, totalW, rowH);
-      y += rowH;
+      ctx.strokeRect(padX, yt, tableW, rowH);
+      yt += rowH;
     });
 
-    y += gameGap;
+    return yt + gameGap;
   }
 
-  // Download
+  // ── Draw all 3 games ────────────────────────────────────────────────
+  for (let g = 0; g < numGames; g++) {
+    y = drawTable(g, y);
+  }
+
+  // ── Download ────────────────────────────────────────────────────────
   const link = document.createElement('a');
-  const dateStr = new Date().toISOString().slice(0,10);
-  link.download = `gales-lanes-scores-lane${state.lane||'x'}-${dateStr}.png`;
+  const dateFile = now.toISOString().slice(0, 10);
+  link.download = `gales-lanes-scores-lane${state.lane || 'x'}-${dateFile}.png`;
   link.href = canvas.toDataURL('image/png');
   link.click();
-  toast('Scores exported! 📥');
+  toast('Score card exported!');
 }
 
 // ─── INACTIVITY TIMER ────────────────────────────────────────────────
